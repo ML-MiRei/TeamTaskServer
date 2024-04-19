@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+option csharp_namespace = "MessengerService";
+
+import "google/protobuf/wrappers.proto";
+
+import "google/protobuf/timestamp.proto";
+
+package chat;
+
+service ChatService {
+
+  rpc UpdateChat (UpdateChatRequest) returns (VoidChatReply);
+  rpc LeaveChat (LeaveChatRequst) returns (VoidChatReply);
+  rpc DeleteUserFromChat (DeleteUserFromChatRequst) returns (VoidChatReply);
+  rpc CreateGroupChat (CreateGroupChatRequest) returns (ChatReply);
+  rpc CreatePrivateChat (CreatePrivateChatRequest) returns (ChatReply);
+  rpc GetListChats (GetListChatsRequest) returns (ListChatsReply);
+  rpc AddUserInChat (AddUserChatRequest) returns (VoidChatReply);
+  rpc GetUsersByChat (GetUsersByChatRequest) returns (GetUsersByChatReply);
+}
+
+message VoidChatReply{}
+
+
+message ChatUserReply {
+     string first_name = 1;
+     string second_name = 2;
+     string last_name = 3;
+     string phone_number = 4;
+     string email = 5;
+     string user_tag = 6;
+}
+
+message GetUsersByChatReply{
+    repeated ChatUserReply users = 1;
+}
+
+message GetUsersByChatRequest{
+    int32 chat_id = 1;
+}
+
+
+
+
+message ChatReply{
+     int32 chat_id = 1;
+     google.protobuf.StringValue name = 2;
+     string admin_tag = 3;
+     int32 chat_type = 4;
+     string image = 5;
+}
+
+
+message GetListChatsRequest{
+    int32 user_id = 1;
+}
+
+message ListChatsReply{
+    repeated ChatReply chats = 1;
+}
+
+message LeaveChatRequst{
+    int32 chat_id = 1;
+    int32 user_id = 2;
+}
+
+
+message DeleteUserFromChatRequst{
+    int32 chat_id = 1;
+    string user_tag = 2;
+}
+
+
+
+message AddUserChatRequest{
+    int32 chat_id = 1;
+    string user_tag = 2;
+}
+
+
+message CreateGroupChatRequest{
+     int32 user_id = 1;
+     string name = 2;
+}
+
+message CreatePrivateChatRequest{
+     int32 user_id = 1;
+     string second_user_tag = 2;
+}
+
+
+message UpdateChatRequest{
+    int32 chat_id = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.StringValue admin_tag = 3;
+}

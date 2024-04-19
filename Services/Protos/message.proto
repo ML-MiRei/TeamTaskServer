@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option csharp_namespace = "Services";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+package Message;
+
+service MessageService {
+  rpc UpdateMessage (UpdateMessageRequest) returns (MessageReply);
+  rpc DeleteMessage (DeleteMessageRequest) returns (MessageReply);
+  rpc CreateMessage (CreateMessageRequest) returns (MessageReply);
+  rpc GetListMessage (GetListMessageRequest) returns (ListMessageReply);
+}
+
+
+message GetListMessageRequest{
+    int32 id_chat = 1;
+    int32 limit = 2;
+    int32 skip = 3;
+}
+
+message ListMessageReply{
+    repeated MessageReply messages = 1;
+}
+
+message UpdateMessageRequest{
+     int32 id_message = 1;
+     string text = 2;
+}
+
+message DeleteMessageRequest{
+    int32 id_message = 1;
+}
+
+message CreateMessageRequest{
+     int32 id_user = 1;
+     int32 id_chat = 2;
+     string text = 3;
+}
+
+message MessageReply {
+     int32 id_message = 1;
+     int32 id_chat = 2;
+     string text = 3;
+     string creator = 4;
+     google.protobuf.Timestamp date_created = 5;
+     int32 id_creator = 6;
+
+}

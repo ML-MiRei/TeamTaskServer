@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Protos\authentication.proto" />
+	  <None Remove="Protos\chat.proto" />
+	  <None Remove="Protos\message.proto" />
+	  <None Remove="Protos\notification.proto" />
+	  <None Remove="Protos\project.proto" />
+	  <None Remove="Protos\project_task.proto" />
+	  <None Remove="Protos\sprint.proto" />
+	  <None Remove="Protos\team.proto" />
+	  <None Remove="Protos\user.proto" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf" Version="3.26.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.62.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Getaway.Application\Getaway.Application.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\authentication.proto">
+			<GrpcServices>Client</GrpcServices>
+		</Protobuf>
+		<Protobuf Include="Protos\chat.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\message.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\notification.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\project.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\project_task.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\sprint.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\team.proto">
+			<GrpcServices>Client</GrpcServices>
+		</Protobuf>
+		<Protobuf Include="Protos\user.proto">
+			<GrpcServices>Client</GrpcServices>
+		</Protobuf>
+	</ItemGroup>
+
+</Project>

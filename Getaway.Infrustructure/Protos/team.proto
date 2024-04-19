@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+option csharp_namespace = "Getaway.Infrustructure";
+
+import "google/protobuf/wrappers.proto";
+
+package team;
+
+service TeamService {
+  rpc UpdateTeam (UpdateTeamsRequest) returns (VoidTeamReply);
+  rpc DeleteUserFromTeam (DeleteUserFromTeamRequst) returns (VoidTeamReply);
+  rpc CreateTeam (CreateTeamRequest) returns (CreateTeamReply);
+  rpc GetListTeams (GetListTeamsRequest) returns (ListTeamsReply);
+  rpc AddUserInTeam (AddUserTeamRequest) returns (VoidTeamReply);
+  rpc LeaveTeam (LeaveTeamRequest) returns (VoidTeamReply);
+  rpc GetUsers (GetUsersRequest) returns (GetUsersReply);
+  
+
+}
+
+message VoidTeamReply{}
+
+
+
+message GetUsersRequest{
+    int32 team_id = 1;
+}
+
+
+message GetUsersReply{
+    repeated UserReply users= 1;
+}
+
+
+message TeamModel{
+     int32 team_id = 1;
+     string team_name = 2;
+     int32 team_lead_id = 3;
+     string team_tag = 4;
+
+}
+
+
+message CreateTeamReply{
+     int32 team_id = 1;
+     string team_name = 2;
+     int32 team_lead_id = 3;
+     string team_tag = 4;
+}
+
+
+message GetListTeamsRequest{
+    int32 user_id = 1;
+}
+
+
+message ListTeamsReply{
+    repeated TeamModel teams = 1;
+}
+
+message DeleteUserFromTeamRequst{
+    int32 team_id = 1;
+    string user_tag = 2;
+}
+
+
+message CreateTeamRequest{
+     int32 user_id = 1;
+     string name = 2;
+}
+
+message AddUserTeamRequest{
+    int32 team_id = 1;
+    string user_tag = 2;
+}
+
+
+message UpdateTeamsRequest{
+     int32 team_id = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.StringValue team_lead_tag = 3;
+}
+
+message UserReply {
+     string first_name = 1;
+     string second_name = 2;
+     string last_name = 3;
+     string phone_number = 4;
+     string email = 5;
+     string user_tag = 6;
+}
+
+
+message LeaveTeamRequest{
+
+    int32 user_id = 1;
+    int32 team_id = 2;
+}

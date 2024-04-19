@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option csharp_namespace = "Services";
+
+import "google/protobuf/wrappers.proto";
+
+package team;
+
+service TeamService {
+  rpc UpdateTeams (UpdateTeamsRequest) returns (VoidTeamReply);
+  rpc LeaveTeam (LeaveTeamRequst) returns (LeaveTeamReply);
+  rpc CreateTeams (CreateTeamRequest) returns (TeamModel);
+  rpc GetListTeams (GetListTeamsRequest) returns (ListTeamsReply);
+  rpc AddUserTeam (AddUserTeamRequest) returns (VoidTeamReply);
+}
+
+message VoidTeamReply{}
+
+
+
+message TeamModel{
+     int32 id_team = 1;
+     string name = 2;
+     string tag_lead = 3;
+}
+
+
+message TeamUser{
+    int32 id_team_user = 1;
+}
+
+message GetListTeamsRequest{
+    int32 id_user = 1;
+}
+
+message ListTeamsReply{
+    repeated TeamModel teams = 1;
+}
+
+message LeaveTeamRequst{
+    int32 id_team = 1;
+    string tag_user = 2;
+}
+
+message LeaveTeamReply{
+    int32 id_team = 1;
+}
+
+message CreateTeamRequest{
+     int32 id_user = 1;
+     string name = 2;
+}
+
+message AddUserTeamRequest{
+    int32 id_team = 1;
+    string user_tag = 2;
+}
+
+
+message UpdateTeamsRequest{
+     int32 id_team = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.StringValue tag_lead = 3;
+}
+

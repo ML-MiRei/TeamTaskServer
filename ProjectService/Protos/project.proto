@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+option csharp_namespace = "ProjectService";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package project;
+
+service ProjectService {
+  rpc UpdateProject (UpdateProjectRequest) returns (VoidProjectReply);
+  rpc DeleteProject (DeleteProjectRequest) returns (VoidProjectReply);
+  rpc CreateProject (CreateProjectRequest) returns (ProjectModel);
+  rpc GetListProjects (GetListProjectsRequest) returns (ListProjectsReply);
+  rpc AddTeamInProject (AddTeamInProjectRequest) returns (VoidProjectReply);
+  rpc AddUserInProject (AddUserInProjectRequest) returns (VoidProjectReply);
+  rpc DeleteUserFromProject (DeleteUserFromProjectRequest) returns (VoidProjectReply);
+  rpc LeaveFromProject (LeaveFromProjectRequest) returns (VoidProjectReply);
+  rpc GetUsersFromProject (GetUsersFromProjectRequest) returns (GetUsersFromProjectReply);
+}
+
+
+message VoidProjectReply{}
+
+
+message GetListProjectsRequest{
+    int32 user_id = 1;
+}
+
+
+message GetUsersFromProjectRequest{
+    int32 project_id = 1;
+}
+
+
+message UpdateProjectRequest{
+    int32 project_id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue project_lead_tag = 3;
+}
+
+
+
+message UserFromProjectReply{
+     string first_name = 1;
+     string second_name = 2;
+     string last_name = 3;
+     string phone_number = 4;
+     string email = 5;
+     string user_tag = 6;
+}
+
+message GetUsersFromProjectReply{
+    repeated UserFromProjectReply users = 1;
+}
+
+
+message ListProjectsReply{
+    repeated ProjectModel projects = 1;
+}
+
+
+message DeleteProjectRequest{
+    int32 project_id = 1;
+}
+
+message CreateProjectRequest{
+     int32 user_id = 1;
+     string name = 2;
+}
+
+message ProjectModel {
+     int32 project_id = 1;
+     string name = 2;
+     int32 project_lead_id = 3;
+}
+
+message AddTeamInProjectRequest{
+    int32 project_id = 1;
+    string team_tag = 2;
+}
+message AddUserInProjectRequest{
+    int32 project_id = 1;
+    string user_tag = 2;
+}
+
+
+message DeleteUserFromProjectRequest{
+    int32 project_id = 1;
+    string user_tag = 2;
+}
+
+message LeaveFromProjectRequest{
+    int32 project_id = 1;
+    int32 user_id = 2;
+}

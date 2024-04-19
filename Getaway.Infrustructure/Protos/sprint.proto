@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+option csharp_namespace = "Getaway.Infrustructure";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package sprint;
+
+service SprintService {
+  rpc CreateSprint (CreateSprintRequest) returns (CreateSprintReply);
+  rpc DeleteSprint (DeleteSprintRequest) returns (VoidSprintReply);
+  rpc ChangeDateStartSprint (ChangeDateStartSprintRequest) returns (VoidSprintReply);
+  rpc ChangeDateEndSprint (ChangeDateEndSprintRequest) returns (VoidSprintReply);
+  rpc GetListSprints (GetListSprintsRequest) returns (GetListSprintsReply);
+}
+
+
+message VoidSprintReply{}
+
+message CreateSprintRequest{
+
+	int32 project_id = 1;
+	google.protobuf.Timestamp date_start = 2;
+	google.protobuf.Timestamp date_end = 3;
+}
+
+
+message CreateSprintReply{
+	int32 project_id = 1;
+	google.protobuf.Timestamp date_start = 2;
+	google.protobuf.Timestamp date_end = 3;
+	int32 sprint_id = 4;
+}
+
+
+message ChangeDateEndSprintRequest{
+	google.protobuf.Timestamp date_end = 1;
+	int32 sprint_id = 2;
+}
+
+message ChangeDateStartSprintRequest{
+	google.protobuf.Timestamp date_start = 1;
+	int32 sprint_id = 2;
+}
+
+message DeleteSprintRequest{
+	int32 sprint_id = 2;
+}
+
+message GetListSprintsRequest{
+	int32 project_id = 1;
+}
+
+message GetListSprintsReply{
+	repeated SprintReply sprints = 1;
+}
+
+message SprintReply{
+	int32 project_id = 1;
+	google.protobuf.Timestamp date_start = 2;
+	google.protobuf.Timestamp date_end = 3;
+	int32 sprint_id = 4;
+}

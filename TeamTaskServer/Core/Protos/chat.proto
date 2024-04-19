@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option csharp_namespace = "TeamTaskServerAPI";
+
+import "google/protobuf/wrappers.proto";
+
+package chat;
+
+service ChatService {
+  rpc UpdateChats (UpdateChatRequest) returns (ChatReply);
+  rpc LeaveChat (LeaveChatRequst) returns (LeaveChatReply);
+  rpc CreateGroup (CreateGroupRequest) returns (ListChatItem);
+  rpc CreateChats (CreateChatRequest) returns (ListChatItem);
+  rpc GetListChats (GetListChatsRequest) returns (ListChatsReply);
+  rpc AddUserChat (AddUserChatRequest) returns (VoidChatReply);
+}
+
+
+message VoidChatReply{}
+
+message ListChatItem{
+     int32 id_chat = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.Int32Value id_admin = 3;
+     int32 chat_type_n = 4;
+     google.protobuf.StringValue lastMessage = 5;
+     google.protobuf.StringValue lastMessageCreator = 6;
+     string image = 7;
+     repeated ChatUser chat_users = 8;
+}
+
+message ChatUser{
+    int32 id_chat_user = 1;
+}
+
+message GetListChatsRequest{
+    int32 id_user = 1;
+}
+
+message ListChatsReply{
+    repeated ListChatItem chats = 1;
+}
+
+message LeaveChatRequst{
+    int32 id_chat = 1;
+    int32 id_user = 2;
+}
+
+message LeaveChatReply{
+    int32 id_chat = 1;
+}
+
+message CreateChatRequest{
+     int32 id_user = 1;
+     string user_tag = 2;
+}
+
+message AddUserChatRequest{
+    int32 id_chat = 1;
+    string user_tag = 2;
+}
+
+
+message CreateGroupRequest{
+     int32 id_user = 1;
+     string name = 2;
+}
+
+message ChatReply {
+     int32 id_chat = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.Int32Value id_admin = 3;
+     int32 chat_type_n = 4;
+}
+
+message UpdateChatRequest{
+    int32 id_chat = 1;
+     google.protobuf.StringValue name = 2;
+     google.protobuf.Int32Value id_admin = 3;
+     int32 chat_type_n = 4;
+
+
+}

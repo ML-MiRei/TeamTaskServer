@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option csharp_namespace = "Getaway.Infrustructure";
+
+package notification;
+
+service NotificationService {
+  rpc GetListNotifications (GetListNotificationsRequest) returns (GetListNotificationsReply);
+  rpc CreateNotification (CreateNotificationRequest) returns (NotificationReply);
+  rpc DeleteNotification (DeleteNotificationRequest) returns (VoidNotificationReply);
+}
+
+message VoidNotificationReply{}
+
+message CreateNotificationRequest{
+	string title = 1;
+	string details = 2;
+	repeated int32 user_id = 3;
+}
+
+
+message DeleteNotificationRequest{
+	int32 notification_id = 1;
+	int32 user_id = 2;
+}
+
+message NotificationReply{
+	string title = 1;
+	string details = 2;
+	int32 notification_id = 3;
+}
+
+
+
+
+message GetListNotificationsRequest{
+	 int32 user_id = 1;
+}
+
+
+message GetListNotificationsReply{
+	repeated NotificationReply notifications = 1;
+}

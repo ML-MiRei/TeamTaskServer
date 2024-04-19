@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+option csharp_namespace = "Getaway.Infrustructure";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package project_task;
+
+service ProjectTaskService {
+  rpc UpdateProjectTask (UpdateProjectTaskRequest) returns (VoidProjectTaskReply);
+  rpc DeleteProjectTask (DeleteProjectTaskRequest) returns (VoidProjectTaskReply);
+  rpc CreateProjectTask (CreateProjectTaskRequest) returns (ProjectTaskReply);
+  rpc GetListProjectTasks (GetListProjectTasksRequest) returns (ListProjectTasksReply);
+  rpc ChangeStatusProjectTask (ChangeStatusProjectTaskRequest) returns (VoidProjectTaskReply);
+
+  rpc SetExecutorProjectTask (SetExecutorProjectTaskRequest) returns (VoidProjectTaskReply);
+  rpc AddProjectTaskInSprint (AddProjectTaskInSprintRequest) returns (VoidProjectTaskReply);
+}
+
+
+message VoidProjectTaskReply{}
+
+
+message GetListProjectTasksRequest{
+    int32 project_id = 1;
+}
+
+message ChangeStatusProjectTaskRequest{
+    int32 project_tasks_id = 1;
+    int32 status = 2;
+}
+
+
+message AddProjectTaskInSprintRequest{
+    int32 project_tasks_id = 1;
+    int32 sprint_id = 2;
+}
+
+message SetExecutorProjectTaskRequest{
+    int32 project_tasks_id = 1;
+    string user_tag = 2;
+}
+
+
+message ListProjectTasksReply{
+    repeated ProjectTaskReply project_tasks = 1;
+}
+
+
+message UpdateProjectTaskRequest{
+     int32 project_tasks_id = 1;
+     string title = 2;
+     string details = 3;
+}
+
+message DeleteProjectTaskRequest{
+    int32 project_task_id = 1;
+}
+
+message CreateProjectTaskRequest{
+     google.protobuf.Int32Value sprint_id = 1;
+     int32 project_id = 4;
+     string title = 2;
+     string details = 3;
+     int32 status = 5;
+}
+
+
+
+message ProjectTaskReply {
+      google.protobuf.Int32Value sprint_id = 1;
+     int32 project_id = 7;
+     string title = 2;
+     string details = 3;
+     int32 project_tasks_id = 4;
+     google.protobuf.Int32Value user_id = 5;
+          int32 status = 6;
+}

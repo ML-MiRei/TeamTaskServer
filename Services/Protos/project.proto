@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option csharp_namespace = "Services";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package project;
+
+service ProjectService {
+  rpc UpdateProjects (ProjectModel) returns (ProjectModel);
+  rpc DeleteProjects (DeleteProjectRequest) returns (ProjectModel);
+  rpc CreateProjects (CreateProjectRequest) returns (ProjectModel);
+  rpc GetListProjects (GetListProjectsRequest) returns (ListProjectsReply);
+}
+
+
+message GetListProjectsRequest{
+    int32 id_user = 1;
+}
+
+message ListProjectsReply{
+    repeated ProjectModel projects = 1;
+}
+
+
+message DeleteProjectRequest{
+    int32 id_project = 1;
+    int32 id_user = 2;
+}
+
+message CreateProjectRequest{
+     int32 id_user = 1;
+     string name = 2;
+     int32 id_team = 3;
+}
+
+message ProjectModel {
+     int32 id_project = 1;
+     string name = 2;
+     int32 id_creator = 3;
+}

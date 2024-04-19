@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option csharp_namespace = "Services";
+
+package user;
+
+service UserService {
+  rpc UpdateUser (UpdateUserRequest) returns (UserReply);
+  rpc DeleteUser (DeleteUserRequest) returns (UserReply);
+  rpc CreateUser (CreateUserRequest) returns (UserReply);
+  rpc GetUser (GetUserRequest) returns (UserReply);
+  rpc GetUserByTeam (GetUserByTeamRequest) returns (ListUsersReply);
+  rpc GetUserByChat (GetUserByChatRequest) returns (ListUsersReply);
+}
+
+
+message GetUserRequest{
+    string tag = 1;
+}
+
+message Answer{
+    bool result = 1;
+}
+
+message GetUserByChatRequest{
+    int32 id_chat = 1;
+}
+
+message GetUserByTeamRequest{
+    int32 id_team = 1;
+}
+
+message ListUsersReply{
+    repeated UserListItemReply users = 1;
+}
+
+
+message UpdateUserRequest{
+     int32 id = 1;
+     string first_name = 2;
+     string second_name = 3;
+     string last_name = 4;
+     string phone = 5;
+     string email = 6;
+}
+
+message DeleteUserRequest{
+    int32 id = 1;
+}
+
+message CreateUserRequest{
+     string first_name = 1;
+     string second_name = 2;
+     string last_name = 3;
+     string phone = 4;
+     string email = 5;
+     string password = 6;
+}
+
+message UserListItemReply {
+     string first_name = 1;
+     string second_name = 2;
+     string last_name = 3;
+     string phone = 4;
+     string email = 5;
+     string tag = 6;
+}
+
+
+message UserReply {
+     int32 id_user = 1;
+     string first_name = 2;
+     string second_name = 3;
+     string last_name = 4;
+     string phone = 5;
+     string email = 6;
+     string tag = 8;
+}

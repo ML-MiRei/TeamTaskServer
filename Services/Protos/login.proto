@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+option csharp_namespace = "Services";
+
+package login;
+
+service LoginService {
+
+	rpc Authorization(AuthorizationRequest) returns (AuthorizationReply);
+	rpc Registration(RegistrationRequest) returns (RegistrationReply);
+	rpc IsRegistred(IsRegistredRequest) returns (IsRegistredReplay);
+
+}
+
+message AuthorizationRequest{
+	string email = 1;
+	string password = 2;
+}
+
+
+message AuthorizationReply{
+	int32 id_user = 2;
+		string email = 1;
+	  string first_name = 6;
+     string second_name = 3;
+     string last_name = 4;
+     string phone = 5;
+	 string tag =7;
+}
+
+
+message RegistrationRequest{
+	string email = 1;
+	string password = 2;
+	  string first_name = 6;
+     string second_name = 3;
+     string last_name = 4;
+     string phone = 5;
+}
+
+message RegistrationReply{
+	int32 id_user = 1;
+	string tag = 2;
+}
+
+message IsRegistredRequest{
+	string email = 1;
+}
+
+message IsRegistredReplay{
+	bool result = 1;
+}
