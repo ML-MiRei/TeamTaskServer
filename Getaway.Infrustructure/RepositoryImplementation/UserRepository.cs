@@ -55,7 +55,8 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                     SecondName = user.SecondName,
                     LastName = user.LastName,
                     Email = user.Email,
-                    PhoneNumber = user.PhoneNumber
+                    PhoneNumber = user.PhoneNumber,
+                    ID = user.Id.Value
                 };
             }
             catch

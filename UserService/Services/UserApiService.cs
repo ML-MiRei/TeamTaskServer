@@ -70,7 +70,8 @@ namespace UserService.Services
                             LastName = u.LastName,
                             PhoneNumber = u.PhoneNumber,
                             Email = u.Email,
-                            Tag = u.UserTag
+                            Tag = u.UserTag,
+                            Id = u.ID
                         }).FirstOrDefault();
             if (user == null)
             {

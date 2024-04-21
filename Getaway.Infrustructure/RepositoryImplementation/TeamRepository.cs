@@ -20,7 +20,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                 Console.WriteLine($"{teamId}, {userTag}");
                 await Connections.TeamServiceClient.AddUserInTeamAsync(new AddUserTeamRequest() { TeamId = teamId, UserTag = userTag });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 throw new Exception();
@@ -31,7 +31,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         {
             try
             {
-                var reply = await Connections.TeamServiceClient.CreateTeamAsync(new CreateTeamRequest() { Name = name, UserId = userId});
+                var reply = await Connections.TeamServiceClient.CreateTeamAsync(new CreateTeamRequest() { Name = name, UserId = userId });
                 return new TeamEntity()
                 {
                     ID = reply.TeamId,
@@ -129,6 +129,25 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             {
                 await Connections.TeamServiceClient.LeaveTeamAsync(
                     new LeaveTeamRequest() { TeamId = teamId, UserId = userId });
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
+
+        public async Task<TeamEntity> GetTeam(int teamId)
+        {
+            try
+            {
+                var reply = await Connections.TeamServiceClient.GetTeamAsync(new GetTeamRequest { TeamId = teamId });
+                return new TeamEntity
+                {
+                    ID = reply.TeamId,
+                    Name = reply.TeamName,
+                    Tag = reply.TeamTag,
+                    TeamLeadId = reply.TeamLeadId
+                };
             }
             catch
             {

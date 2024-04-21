@@ -14,6 +14,8 @@ namespace Getaway.Application.ReturnsModels
         public string UserTag { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
+        public int ColorNumber { get; set; }
+
 
     }
 }

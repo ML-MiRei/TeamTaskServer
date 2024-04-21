@@ -3,6 +3,7 @@ using Getaway.Application.CQRS.User.Commands.DeleteUser;
 using Getaway.Application.CQRS.User.Commands.UpdateUser;
 using Getaway.Application.CQRS.User.Queries.GetUserById;
 using Getaway.Application.CQRS.User.Queries.GetUserByTag;
+using Getaway.Application.ReturnsModels;
 using Getaway.Core.Entities;
 using Getaway.Core.Exceptions;
 using MediatR;
@@ -17,7 +18,7 @@ namespace Getaway.Presentation.Controllers
     public class UserController(IMediator mediator) : ControllerBase
     {
 
-
+        Random random = new Random();
 
         [HttpGet("tag/{userTag}")]
         public async Task<ActionResult> GetUserByTag( string userTag)
@@ -27,7 +28,16 @@ namespace Getaway.Presentation.Controllers
                 Console.WriteLine("Find user..");
                 var user = mediator.Send(new GetUserByTagQuery() { UserTag = userTag }).Result;
                 Console.WriteLine($"{user.FirstName}");
-                return Ok(user);
+                return Ok(new UserModel
+                {
+                    FirstName = user.FirstName,
+                    SecondName = user.SecondName,
+                    LastName = user.LastName,
+                    UserTag = user.Tag,
+                    PhoneNumber = user.PhoneNumber,
+                    ColorNumber = random.Next(5),
+                    Email = user.Email
+                });
             }
             catch (NotFoundException)
             {
@@ -45,7 +55,16 @@ namespace Getaway.Presentation.Controllers
             try
             {
                 var user = mediator.Send(new GetUserByIdQuery() { UserId = userId }).Result;
-                return Ok(user);
+                return Ok(new UserModel
+                {
+                    FirstName = user.FirstName,
+                    SecondName = user.SecondName,
+                    LastName = user.LastName,
+                    UserTag = user.Tag,
+                    PhoneNumber = user.PhoneNumber,
+                    ColorNumber = random.Next(5),
+                    Email = user.Email
+                });
             }
             catch (NotFoundException)
             {

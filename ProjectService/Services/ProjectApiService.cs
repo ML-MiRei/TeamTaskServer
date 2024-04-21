@@ -19,6 +19,18 @@ namespace ProjectService.Services
             db = new MyDbContext();
         }
 
+
+        public async override Task<ProjectModel> GetProject(GetProjectRequest request, ServerCallContext context)
+        {
+            var project = await db.Projects.FindAsync(request.ProjectId);
+            return new ProjectModel
+            {
+                Name = project.ProjectName,
+                ProjectId = project.ID,
+                ProjectLeadId = project.ProjectLeadId
+            };
+        }
+
         public async override Task<VoidProjectReply> LeaveFromProject(LeaveFromProjectRequest request, ServerCallContext context)
         {
             try

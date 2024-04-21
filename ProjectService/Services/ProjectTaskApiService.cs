@@ -172,6 +172,7 @@ namespace ProjectService.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                _logger.LogError(ex.InnerException.Message);
                 throw new RpcException(new Status(StatusCode.Internal, "update database error"));
             }
         }

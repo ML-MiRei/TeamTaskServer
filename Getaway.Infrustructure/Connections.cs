@@ -85,7 +85,7 @@ namespace Getaway.Infrustructure
                 {
                     try
                     {
-                        var channel = GrpcChannel.ForAddress("https://localhost:7274");
+                        var channel = GrpcChannel.ForAddress("https://localhost:7029");
                         _notificationServiceClient = new NotificationService.NotificationServiceClient(channel);
 
                     }

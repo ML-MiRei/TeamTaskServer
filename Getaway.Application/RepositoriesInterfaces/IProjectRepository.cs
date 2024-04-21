@@ -13,6 +13,7 @@ namespace Getaway.Application.RepositoriesInterfaces
         void DeleteProjects(int projectId);
         Task<ProjectEntity> CreateProjects(int userId, string name);
         Task<List<ProjectEntity>> GetListProjects(int userId);
+        Task<ProjectEntity> GetProject(int projectId);
         Task<List<UserEntity>> GetUsersByProject(int projectId);
         void AddTeamInProject(int projectId, string teamTag);
         void AddUserInProject(int projectId, string userTag);

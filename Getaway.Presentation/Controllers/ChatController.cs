@@ -5,12 +5,15 @@ using Getaway.Application.CQRS.Messenger.Chat.Commands.CreatePrivateChat;
 using Getaway.Application.CQRS.Messenger.Chat.Commands.DeleteUserFromChat;
 using Getaway.Application.CQRS.Messenger.Chat.Commands.LeaveChat;
 using Getaway.Application.CQRS.Messenger.Chat.Commands.UpdateGroupChat;
+using Getaway.Application.CQRS.Messenger.Chat.Queries.GetChat;
 using Getaway.Application.CQRS.Messenger.Chat.Queries.GetChats;
 using Getaway.Application.CQRS.Messenger.Message.Commands.CreateMessage;
 using Getaway.Application.CQRS.Messenger.Message.Commands.DeleteMessage;
 using Getaway.Application.CQRS.Messenger.Message.Commands.UpdateMessage;
 using Getaway.Application.CQRS.Messenger.Message.Queries.GetMessages;
+using Getaway.Application.CQRS.Notification.Commands.CreateNotification;
 using Getaway.Application.CQRS.Team.Queries.GetUsersByChhat;
+using Getaway.Application.CQRS.Team.Queries.GetUsersByTeam;
 using Getaway.Application.CQRS.User.Queries.GetUserById;
 using Getaway.Application.CQRS.User.Queries.GetUserByTag;
 using Getaway.Application.ReturnsModels;
@@ -20,6 +23,7 @@ using Getaway.Infrustructure;
 using Getaway.Presentation.Hubs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Client;
 
 
 namespace Getaway.Presentation.Controllers
@@ -28,7 +32,9 @@ namespace Getaway.Presentation.Controllers
     [ApiController]
     public class ChatController(IMediator mediator) : ControllerBase
     {
-        NotificationHub notificationHub = new NotificationHub(mediator);
+
+        Random random = new Random();
+
 
         [HttpGet("list")]
         public async Task<ActionResult> GetChatsList(int userId)
@@ -56,9 +62,13 @@ namespace Getaway.Presentation.Controllers
                         FirstName = u.FirstName,
                         SecondName = u.SecondName,
                         PhoneNumber = u.PhoneNumber,
-                        UserTag = u.Tag
+                        UserTag = u.Tag,
+                        ColorNumber = random.Next(5)
+
                     }).ToList(),
-                    Type = chat.Type
+                    Type = chat.Type,
+                    ColorNumber = random.Next(5),
+                    UserRole = chat.Type == (int)ChatType.GROUP && chat.AdminId == userId ? (int)UserRole.LEAD : (int)UserRole.EMPLOYEE
 
                 });
 
@@ -100,11 +110,32 @@ namespace Getaway.Presentation.Controllers
 
                 };
 
-                await notificationHub.ChatNotification(
-                     NotificationAction.CREATE,
-                     mediator.Send(new GetUserByTagQuery { UserTag = secondUserTag }).Result.ID,
-                     chatModel
-                     );
+
+                try
+                {
+
+                    
+
+                    await mediator.Send(new CreateNotificationCommand
+                    {
+                        Details = "You have been added to a new chat",
+                        Title = "Chats",
+                        UserId = new List<int> {
+                            (await mediator.Send(new GetUserByTagQuery{ UserTag = secondUserTag})).ID
+                        }
+                    });
+
+                    await NotificationHub.HubConnection().SendAsync("ChatNotification", 
+                         NotificationAction.CREATE,
+                         (await mediator.Send(new GetUserByTagQuery { UserTag = secondUserTag })).ID,
+                         chatModel
+                         );
+                }
+                catch (Exception ex)
+                {
+                    await Console.Out.WriteLineAsync(ex.Message);
+                }
+
 
 
                 return Ok(chatModel);
@@ -200,7 +231,7 @@ namespace Getaway.Presentation.Controllers
         }
 
 
-        [HttpDelete("{chatId}/add-user")]
+        [HttpPost("{chatId}/add-user")]
         public async Task<ActionResult> AddUserInChat(int chatId, [FromBody] string userTag)
         {
             try
@@ -209,21 +240,89 @@ namespace Getaway.Presentation.Controllers
 
                 var user = await mediator.Send(new GetUserByTagQuery { UserTag = userTag });
 
+                try
+                {
+
+                    var newUser = await mediator.Send(new GetUserByTagQuery { UserTag = userTag });
 
 
-                await notificationHub.MembersChatNotification(
-                    NotificationAction.ADD_USER,
-                    chatId,
-                    new UserModel
+                    await mediator.Send(new CreateNotificationCommand
                     {
-                        Email = user.Email,
-                        SecondName = user.SecondName,
-                        FirstName = user.FirstName,
-                        LastName = user.FirstName,
-                        PhoneNumber = user.PhoneNumber,
-                        UserTag = userTag
-                    }
-                    );
+                        Details = "You have been added to a new chat",
+                        Title = "Chats",
+                        UserId = new List<int> { newUser.ID }
+                    });
+
+                    await mediator.Send(new CreateNotificationCommand
+                    {
+                        Details = "You have been added to a new chat",
+                        Title = "Chats",
+                        UserId =
+                            (await mediator.Send(new GetUsersByChatQuery { ChatId = chatId })).Where(u => u.ID != newUser.ID)
+                            .Select(u => u.ID)
+                            .ToList()
+
+                    }); ;
+
+
+                    var chat = await mediator.Send(new GetChatQuery { ChatId = chatId });
+
+
+                    Task task1 = NotificationHub.HubConnection().SendAsync("ChatNotification",
+                         NotificationAction.CREATE,
+                         newUser.ID,
+                         new ChatModel
+                         {
+                             ChatId = chat.ID,
+                             Image = chat.Image,
+                             ChatName = chat.ChatName,
+                             Messages = mediator.Send(new GetMessagesQuery { ChatId = chat.ID }).Result
+                                         .Select(m => new MessageModel { MessageId = m.ID, TextMessage = m.TextMessage, UserNameCreator = m.UserNameCreator, CreatorTag = m.CreatorTag, DateCreated = m.DateCreated })
+                                         .OrderBy(m => m.MessageId)
+                                         .ToList(),
+                             Users = mediator.Send(new GetUsersByChatQuery { ChatId = chat.ID }).Result.Select(u => new UserModel
+                             {
+                                 Email = u.Email,
+                                 LastName = u.LastName,
+                                 FirstName = u.FirstName,
+                                 SecondName = u.SecondName,
+                                 PhoneNumber = u.PhoneNumber,
+                                 UserTag = u.Tag,
+                                 ColorNumber = random.Next(5)
+
+                             }).ToList(),
+                             Type = chat.Type,
+                             ColorNumber = random.Next(5),
+                             UserRole = (int)UserRole.EMPLOYEE
+                         }
+                         );
+
+
+                    Task task2 = NotificationHub.HubConnection().SendAsync("MembersChatNotification",
+                                      NotificationAction.ADD_USER,
+                                      chatId,
+                                      new UserModel
+                                      {
+                                          Email = user.Email,
+                                          SecondName = user.SecondName,
+                                          FirstName = user.FirstName,
+                                          LastName = user.FirstName,
+                                          PhoneNumber = user.PhoneNumber,
+                                          UserTag = userTag,
+                                          ColorNumber = random.Next(5)
+                                      }
+                                      );
+
+                    Task.WaitAll(task1, task2);
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(ex.InnerException.Message);
+                }
+
+
 
 
 
@@ -260,6 +359,51 @@ namespace Getaway.Presentation.Controllers
             {
                 await mediator.Send(new UpdateGroupChatCommand { ChatId = chatId, Name = chatEntity.ChatName, AdminTag = chatEntity.AdminTag });
 
+                try
+                {
+
+
+                    var users = (await mediator.Send(new GetUsersByChatQuery { ChatId = chatId }))
+                                .Select(u => u.ID)
+                                .ToList();
+
+
+
+                    await mediator.Send(new CreateNotificationCommand
+                    {
+                        Details = "One of the chats has been updated",
+                        Title = "Chats",
+                        UserId = users
+                    });
+
+
+                    List<Task> tasks = new List<Task>();    
+
+                    foreach (var user in users)
+                    {
+
+                        tasks.Add(NotificationHub.HubConnection().SendAsync("ChatNotification",
+                             NotificationAction.UPDATE,
+                             user,
+                             new ChatModel
+                             {
+                                 ChatName = chatEntity.ChatName,
+                                 ChatId = chatId
+                             }
+
+                             ));
+                    }
+                    Task.WaitAll(tasks.ToArray());
+
+                }
+                catch (Exception)
+                {
+
+                }
+
+
+
+
                 return Ok();
             }
             catch (Exception)
@@ -281,19 +425,86 @@ namespace Getaway.Presentation.Controllers
 
 
 
-                await notificationHub.MembersChatNotification(
-                    NotificationAction.DELETE_USER,
-                    chatId,
-                    new UserModel
+                try
+                {
+
+                    var kickedUser = await mediator.Send(new GetUserByTagQuery { UserTag = userTag });
+
+
+                    await mediator.Send(new CreateNotificationCommand
                     {
-                        Email = user.Email,
-                        SecondName = user.SecondName,
-                        FirstName = user.FirstName,
-                        LastName = user.FirstName,
-                        PhoneNumber = user.PhoneNumber,
-                        UserTag = userTag
-                    }
-                    );
+                        Details = "You were kicked out of the chat",
+                        Title = "Chats",
+                        UserId = new List<int> { kickedUser.ID }
+                    });
+
+                    await mediator.Send(new CreateNotificationCommand
+                    {
+                        Details = $"User {kickedUser.FirstName} has left the chat",
+                        Title = "Chats",
+                        UserId =
+                            (await mediator.Send(new GetUsersByChatQuery { ChatId = chatId })).Where(u => u.ID != kickedUser.ID)
+                            .Select(u => u.ID)
+                            .ToList()
+
+                    }); ;
+
+
+                    var chat = await mediator.Send(new GetChatQuery { ChatId = chatId });
+
+
+                    Task task1 = NotificationHub.HubConnection().SendAsync("ChatNotification",
+                         NotificationAction.DELETE,
+                         kickedUser.ID,
+                         new ChatModel
+                         {
+                             ChatId = chat.ID,
+                             Image = chat.Image,
+                             ChatName = chat.ChatName,
+                             Messages = mediator.Send(new GetMessagesQuery { ChatId = chat.ID }).Result
+                                         .Select(m => new MessageModel { MessageId = m.ID, TextMessage = m.TextMessage, UserNameCreator = m.UserNameCreator, CreatorTag = m.CreatorTag, DateCreated = m.DateCreated })
+                                         .OrderBy(m => m.MessageId)
+                                         .ToList(),
+                             Users = mediator.Send(new GetUsersByChatQuery { ChatId = chat.ID }).Result.Select(u => new UserModel
+                             {
+                                 Email = u.Email,
+                                 LastName = u.LastName,
+                                 FirstName = u.FirstName,
+                                 SecondName = u.SecondName,
+                                 PhoneNumber = u.PhoneNumber,
+                                 UserTag = u.Tag,
+                                 ColorNumber = random.Next(5)
+
+                             }).ToList(),
+                             Type = chat.Type,
+                             ColorNumber = random.Next(5),
+                             UserRole = (int)UserRole.EMPLOYEE
+                         }
+                         );
+
+
+                    Task task2 = NotificationHub.HubConnection().SendAsync("MembersChatNotification",
+                                      NotificationAction.DELETE_USER,
+                                      chatId,
+                                      new UserModel
+                                      {
+                                          Email = user.Email,
+                                          SecondName = user.SecondName,
+                                          FirstName = user.FirstName,
+                                          LastName = user.FirstName,
+                                          PhoneNumber = user.PhoneNumber,
+                                          UserTag = userTag,
+                                          ColorNumber = random.Next(5)
+                                      }
+                                      );
+
+                    Task.WaitAll(task1, task2);
+
+                }
+                catch (Exception)
+                {
+
+                }
 
                 return Ok();
             }
@@ -314,20 +525,48 @@ namespace Getaway.Presentation.Controllers
                 var user = await mediator.Send(new GetUserByIdQuery { UserId = userId });
 
 
+                try
+                {
 
-                await notificationHub.MembersChatNotification(
-                    NotificationAction.DELETE_USER,
-                    chatId,
-                    new UserModel
+                    var kickedUser = await mediator.Send(new GetUserByIdQuery { UserId = userId });
+
+                
+                    await mediator.Send(new CreateNotificationCommand
                     {
-                        Email = user.Email,
-                        SecondName = user.SecondName,
-                        FirstName = user.FirstName,
-                        LastName = user.FirstName,
-                        PhoneNumber = user.PhoneNumber,
-                        UserTag = user.Tag
-                    }
-                    );
+                        Details = $"User {kickedUser.FirstName} has left the chat",
+                        Title = "Chats",
+                        UserId =
+                            (await mediator.Send(new GetUsersByChatQuery { ChatId = chatId })).Where(u => u.ID != kickedUser.ID)
+                            .Select(u => u.ID)
+                            .ToList()
+
+                    }); 
+
+
+                    var chat = await mediator.Send(new GetChatQuery { ChatId = chatId });
+
+            
+                   await NotificationHub.HubConnection().SendAsync("MembersChatNotification",
+                                      NotificationAction.DELETE_USER,
+                                      chatId,
+                                      new UserModel
+                                      {
+                                          Email = user.Email,
+                                          SecondName = user.SecondName,
+                                          FirstName = user.FirstName,
+                                          LastName = user.FirstName,
+                                          PhoneNumber = user.PhoneNumber,
+                                          UserTag = kickedUser.Tag,
+                                          ColorNumber = random.Next(5)
+                                      }
+                                      );
+
+
+                }
+                catch (Exception)
+                {
+
+                }
 
                 return Ok();
             }

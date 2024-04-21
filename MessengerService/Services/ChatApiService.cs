@@ -27,6 +27,19 @@ namespace MessengerService.Services
         }
 
 
+        public async override Task<ChatReply> GetChat(GetChatRequest request, ServerCallContext context)
+        {
+            var chat = await db.Chats.FindAsync(request.ChatId);
+            return new ChatReply
+            {
+                AdminTag = db.Users.First(u => u.ID == chat.AdminId).UserTag,
+                ChatType = chat.Type,
+                ChatId = chat.ID,
+                Name = chat.ChatName
+            };
+
+        }
+
         public override Task<GetUsersByChatReply> GetUsersByChat(GetUsersByChatRequest request, ServerCallContext context)
         {
             GetUsersByChatReply listUsers = new GetUsersByChatReply();
@@ -139,6 +152,8 @@ namespace MessengerService.Services
                     ChatId = request.ChatId,
                     UserId = db.Users.First(u => u.UserTag == request.UserTag).ID
                 });
+
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Add user with tag {request.UserTag} in chat with id = {request.ChatId}");
 

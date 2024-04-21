@@ -15,16 +15,25 @@ service TeamService {
   rpc LeaveTeam (LeaveTeamRequest) returns (VoidTeamReply);
   rpc GetUsers (GetUsersRequest) returns (GetUsersReply);
   
+  rpc GetTeam (GetTeamRequest) returns (TeamModel);
 
+}
+
+
+message GetTeamRequest{
+    int32 team_id = 1;
 }
 
 message VoidTeamReply{}
 
 
 
+
+
 message GetUsersRequest{
     int32 team_id = 1;
 }
+
 
 
 message GetUsersReply{

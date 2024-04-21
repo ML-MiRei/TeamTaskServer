@@ -18,8 +18,13 @@ service ChatService {
   rpc GetListChats (GetListChatsRequest) returns (ListChatsReply);
   rpc AddUserInChat (AddUserChatRequest) returns (VoidChatReply);
   rpc GetUsersByChat (GetUsersByChatRequest) returns (GetUsersByChatReply);
+  rpc GetChat (GetChatRequest) returns (ChatReply);
+
 }
 
+message GetChatRequest{
+    int32 chat_id = 1;
+}
 message VoidChatReply{}
 
 

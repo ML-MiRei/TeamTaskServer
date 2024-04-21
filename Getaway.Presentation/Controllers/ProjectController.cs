@@ -18,6 +18,7 @@ using Getaway.Core.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using System;
 
 namespace Getaway.Presentation.Controllers
 {
@@ -26,6 +27,7 @@ namespace Getaway.Presentation.Controllers
     [Route("{userId}/api/[controller]")]
     public class ProjectController(IMediator mediator) : ControllerBase
     {
+        Random random = new Random();
 
 
         [HttpPost("{projectId}/add-team")]
@@ -178,7 +180,9 @@ namespace Getaway.Presentation.Controllers
                             FirstName = u.FirstName,
                             SecondName = u.SecondName,
                             LastName = u.LastName,
-                            PhoneNumber = u.PhoneNumber
+                            PhoneNumber = u.PhoneNumber,
+                            ColorNumber = random.Next(5)
+
                         }).ToList(),
                         Tasks = mediator.Send(new GetProjectTasksQuery { ProjectId = project.ID }).Result.Select(pt => new ProjectTaskModel
                         {

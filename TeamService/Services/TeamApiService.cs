@@ -20,6 +20,19 @@ namespace TeamService.Services
         }
 
 
+        public async override Task<TeamModel> GetTeam(GetTeamRequest request, ServerCallContext context)
+        {
+            var team = await db.Teams.FindAsync(request.TeamId);
+            return new TeamModel
+            {
+                TeamId = team.ID,
+                TeamLeadId = team.TeamLeadId,
+                TeamName = team.TeamName,
+                TeamTag = team.TeamTag,
+            };
+
+        }
+
         public async override Task<VoidTeamReply> LeaveTeam(LeaveTeamRequest request, ServerCallContext context)
         {
             try
@@ -40,11 +53,11 @@ namespace TeamService.Services
                     _logger.LogInformation($"Team {teamId} is deleted");
                 }
 
-               
+
 
                 return new VoidTeamReply();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 throw new Exception();

@@ -15,7 +15,8 @@ namespace Getaway.Application.RepositoriesInterfaces
         Task<List<MessageEntity>> GetListMessage(int chatId);
 
 
-        Task<List<ChatEntity>> GetChatList(int chatId);
+        Task<List<ChatEntity>> GetChatList(int userId);
+        Task<ChatEntity> GetChat (int chatId);
         Task<ChatEntity> CreateGroupChat(int userId, string name);
         Task<ChatEntity> CreatePrivateChat(int userId, string secondUserTag);
         void UpdateGroupChat(int chatId, string? name, string? adminTag);

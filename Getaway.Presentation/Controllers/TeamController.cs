@@ -23,7 +23,7 @@ namespace Getaway.Presentation.Controllers
     [Route("{userId}/api/[controller]")]
     public class TeamController(IMediator mediator) : ControllerBase
     {
-
+        Random random = new Random();
 
 
         [HttpGet("list")]
@@ -40,8 +40,8 @@ namespace Getaway.Presentation.Controllers
                     TeamId = team.ID.Value,
                     TeamTag = team.Tag,
                     TeamName = team.Name,
-                    TeamLeadName = mediator.Send(new GetUserByIdQuery { UserId =team.TeamLeadId.Value}).Result.FirstName,
-                    UserRole = team.TeamLeadId == userId ? (int) UserRole.LEAD : (int)UserRole.EMPLOYEE,
+                    TeamLeadName = mediator.Send(new GetUserByIdQuery { UserId = team.TeamLeadId.Value }).Result.FirstName,
+                    UserRole = team.TeamLeadId == userId ? (int)UserRole.LEAD : (int)UserRole.EMPLOYEE,
                     Users = mediator.Send(new GetUsersByTeamQuery() { TeamId = team.ID.Value }).Result.Select(t => new UserModel()
                     {
                         Email = t.Email,
@@ -49,9 +49,10 @@ namespace Getaway.Presentation.Controllers
                         SecondName = t.SecondName,
                         LastName = t.LastName,
                         PhoneNumber = t.PhoneNumber,
-                        UserTag = t.Tag
+                        UserTag = t.Tag,
+                        ColorNumber = random.Next(5)
                     }).ToList()
-                });
+                }) ;
 
             }
 
@@ -83,9 +84,10 @@ namespace Getaway.Presentation.Controllers
                         SecondName = user.SecondName,
                         LastName = user.LastName,
                         UserTag = user.Tag,
-                        PhoneNumber = user.PhoneNumber
+                        PhoneNumber = user.PhoneNumber,
+                        ColorNumber = random.Next(5)
                     }}
-                });
+                }) ;
 
             }
             catch (Exception ex)

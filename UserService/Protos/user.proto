@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option csharp_namespace = "UserService";
+import "google/protobuf/wrappers.proto";
 
 package user;
 
@@ -55,4 +56,6 @@ message GetUserReply {
      string phone_number = 4;
      string email = 5;
      string tag = 6;
+          google.protobuf.Int32Value id = 7;
+
 }

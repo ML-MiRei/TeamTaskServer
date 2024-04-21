@@ -17,6 +17,14 @@ service ProjectService {
   rpc DeleteUserFromProject (DeleteUserFromProjectRequest) returns (VoidProjectReply);
   rpc LeaveFromProject (LeaveFromProjectRequest) returns (VoidProjectReply);
   rpc GetUsersFromProject (GetUsersFromProjectRequest) returns (GetUsersFromProjectReply);
+
+  rpc GetProject (GetProjectRequest) returns (ProjectModel);
+}
+
+
+
+message GetProjectRequest{
+    int32 project_id = 1;
 }
 
 

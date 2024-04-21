@@ -10,6 +10,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Getaway.Presentation.Hubs
 {
@@ -19,6 +20,32 @@ namespace Getaway.Presentation.Hubs
         private const string GROUP_PROJECT_PREFIX = "project_";
         private const string GROUP_CHAT_PREFIX = "chat_";
         private const string USER_PREFIX = "user_";
+
+
+
+        private static HubConnection _hubConnection;
+
+
+        public override Task OnConnectedAsync()
+        {
+            Console.WriteLine("dd");
+            return base.OnConnectedAsync();
+        }
+        public static HubConnection HubConnection()
+        {
+
+            if (_hubConnection == null)
+            {
+                _hubConnection = new HubConnectionBuilder()
+                .WithUrl("https://localhost:7130/notification")
+                .Build();
+
+                _hubConnection.StartAsync();
+
+
+            }
+            return _hubConnection;
+        }
 
 
         private static IMediator _mediator;
@@ -31,6 +58,9 @@ namespace Getaway.Presentation.Hubs
 
         public async Task ConnectUserWithGroups(int userId)
         {
+
+            await Console.Out.WriteLineAsync("kk");
+
             var teams = await _mediator.Send(new GetTeamsQuery { UserId = userId });
             foreach (var team in teams)
             {
@@ -50,28 +80,35 @@ namespace Getaway.Presentation.Hubs
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, USER_PREFIX + userId);
+            await Console.Out.WriteLineAsync("con " + USER_PREFIX + userId);
 
         }
+
+
+
+
 
         public async Task ChatNotification(NotificationAction action, int userId, ChatModel chatModel)
         {
             try
             {
                 if (action == NotificationAction.CREATE)
+                {
                     await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_CHAT_PREFIX + chatModel.ChatId);
+                }
                 else if (action == NotificationAction.DELETE)
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, GROUP_CHAT_PREFIX + chatModel.ChatId);
 
-                await Clients.Group(USER_PREFIX + userId).SendAsync("NewChatNotification", action, chatModel);                
 
-                Console.WriteLine("New project task Nnotification");
+                await Clients.Group(USER_PREFIX + userId).SendAsync("NewChatNotification", action, chatModel);
+
+                Console.WriteLine("New chat Notification");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
-
 
 
         public async Task MembersChatNotification(NotificationAction action, int chatId, UserModel userModel)
@@ -132,6 +169,8 @@ namespace Getaway.Presentation.Hubs
                 Console.WriteLine(ex.Message);
             }
         }
+
+
 
         public async Task ProjectTaskNotification(NotificationAction action, int projectId, ProjectTaskModel projectTaskModel)
         {

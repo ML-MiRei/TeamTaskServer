@@ -1,4 +1,5 @@
-﻿using Getaway.Core.Entities;
+﻿using Getaway.Application.ReturnsModels;
+using Getaway.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,6 @@ namespace Getaway.Application.ServicesInterfaces
         void AddUserInTeam(int teamId, string userTag);
         Task<List<UserEntity>> GetUsers(int userId);
         void LeaveTeam(int userId, int teamId);
+        Task<TeamEntity> GetTeam(int teamId);
     }
 }

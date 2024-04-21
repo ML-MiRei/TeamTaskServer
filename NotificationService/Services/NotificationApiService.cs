@@ -8,8 +8,8 @@ namespace NotificationService.Services
     public class NotificationApiService : NotificationService.NotificationServiceBase
     {
         private static MyDbContext db;
-        private static ILogger _logger;
-        public NotificationApiService(ILogger logger)
+        private static ILogger<NotificationApiService> _logger;
+        public NotificationApiService(ILogger<NotificationApiService> logger)
         {
             _logger = logger;
             db = new MyDbContext();
@@ -33,6 +33,7 @@ namespace NotificationService.Services
 
                 foreach (int userId in request.UserId)
                 {
+                    await Console.Out.WriteLineAsync(userId + "");
                     await db.Notifications_Users.AddAsync(new Notification_User { UserId = userId, NotificationId = notification.ID });
                 }
 
@@ -50,6 +51,7 @@ namespace NotificationService.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.InnerException.Message);
                 _logger.LogError(ex.Message);
                 throw new RpcException(new Status(StatusCode.Internal, "Create db error"));
             }

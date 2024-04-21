@@ -123,6 +123,26 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
+        public async Task<ChatEntity> GetChat(int chatId)
+        {
+            try
+            {
+                var chat = await Connections.ChatServiceClient.GetChatAsync(new GetChatRequest() { ChatId = chatId });
+                return new ChatEntity()
+                {
+                    ID = chat.ChatId,
+                    ChatName = chat.Name,
+                    Type = chat.ChatType,
+                    AdminTag = chat.AdminTag
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw new Exception();
+            }
+        }
+
         public async Task<List<ChatEntity>> GetChatList(int userId)
         {
             try

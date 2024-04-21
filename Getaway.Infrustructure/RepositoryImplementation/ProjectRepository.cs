@@ -150,5 +150,23 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                 throw new Exception();
             }
         }
+
+        public async Task<ProjectEntity> GetProject(int projectId)
+        {
+            try
+            {
+                var project = await Connections.ProjectServiceClient.GetProjectAsync(new GetProjectRequest() { ProjectId = projectId});
+                return new ProjectEntity()
+                {
+                    ProjectName = project.Name,
+                    ID = project.ProjectId,
+                    ProjectLeadId = project.ProjectLeadId
+                };
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
     }
 }
