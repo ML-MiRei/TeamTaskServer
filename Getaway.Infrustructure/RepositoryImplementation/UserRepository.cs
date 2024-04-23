@@ -34,7 +34,8 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                     LastName = user.LastName,
                     Tag = user.Tag,
                     Email = user.Email,
-                    PhoneNumber = user.PhoneNumber
+                    PhoneNumber = user.PhoneNumber,
+                    ID = userId
                 };
             }
             catch

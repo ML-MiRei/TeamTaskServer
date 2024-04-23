@@ -135,6 +135,7 @@ namespace ProjectService.Services
         public override Task<ListProjectsReply> GetListProjects(GetListProjectsRequest request, ServerCallContext context)
         {
             ListProjectsReply listProjects = new ListProjectsReply();
+
             List<ProjectModel> replyList = (from p in db.Projects
                                             join pt in db.Projects_Users on p.ID equals pt.ProjectId
                                             where pt.UserId == request.UserId
@@ -224,7 +225,8 @@ namespace ProjectService.Services
                                                         SecondName = u.SecondName,
                                                         LastName = u.LastName,
                                                         PhoneNumber = u.PhoneNumber,
-                                                        Email = u.Email
+                                                        Email = u.Email,
+                                                        UserId = u.ID
 
                                                     }).ToList();
 

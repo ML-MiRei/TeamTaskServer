@@ -14,5 +14,6 @@ namespace Getaway.Application.RepositoriesInterfaces
         Task ChangeDateStartSprint(int sprintId, DateTime dateStart);
         Task ChangeDateEndSprint(int sprintId, DateTime dateEnd);
         Task<List<SprintEntity>> GetListSprints(int projectId);
+        Task<SprintEntity> GetSprint(int sprintId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Getaway.Application.CQRS.Notification.Commands.GetNotifications;
+﻿using Getaway.Application.CQRS.Notification.Commands.DeleteNotification;
+using Getaway.Application.CQRS.Notification.Commands.GetNotifications;
 using Getaway.Application.CQRS.Project.Queries.GetProjects;
 using Getaway.Application.CQRS.Project.Queries.GetUsersByProject;
 using Getaway.Application.CQRS.Sprint.Commands.GetSprints;
@@ -36,6 +37,26 @@ namespace Getaway.Presentation.Controllers
                 throw new Exception();
             }
         }
+
+
+
+        [HttpDelete("{notificationId}")]
+        public async Task<ActionResult<List<NotificationModel>>> DeleteNotification(int userId, int notificationId)
+        {
+            try
+            {
+
+                await mediator.Send(new DeleteNotificationCommand() { NotificationId = notificationId, UserId = userId });
+
+                return Ok();
+
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
+
 
 
     }

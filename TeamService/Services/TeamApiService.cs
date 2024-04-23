@@ -2,6 +2,7 @@ using GreatDatabase.Data;
 using GreatDatabase.Data.Model;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Microsoft.EntityFrameworkCore;
 using TeamService;
 
 namespace TeamService.Services
@@ -22,14 +23,23 @@ namespace TeamService.Services
 
         public async override Task<TeamModel> GetTeam(GetTeamRequest request, ServerCallContext context)
         {
-            var team = await db.Teams.FindAsync(request.TeamId);
-            return new TeamModel
+            try
             {
-                TeamId = team.ID,
-                TeamLeadId = team.TeamLeadId,
-                TeamName = team.TeamName,
-                TeamTag = team.TeamTag,
-            };
+                var team = await db.Teams.FindAsync(request.TeamId);
+                return new TeamModel
+                {
+                    TeamId = team.ID,
+                    TeamLeadId = team.TeamLeadId,
+                    TeamName = team.TeamName,
+                    TeamTag = team.TeamTag,
+                };
+            }
+
+            catch (Exception)
+            {
+                return null;
+            }
+
 
         }
 
@@ -37,18 +47,18 @@ namespace TeamService.Services
         {
             try
             {
-                var user = db.Teams_Users.First(c => c.TeamId == request.TeamId && c.UserId == request.UserId);
+                var user = await db.Teams_Users.FirstAsync(c => c.TeamId == request.TeamId && c.UserId == request.UserId);
                 int teamId = user.TeamId;
                 db.Teams_Users.Remove(user);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"User with id = {user.UserId} leave team with id = {teamId}");
 
                 if (!db.Teams_Users.Any(cu => cu.TeamId == teamId))
                 {
-                    Team team = db.Teams.Find(teamId);
+                    Team team = await db.Teams.FindAsync(teamId);
                     db.Teams.Remove(team);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     _logger.LogInformation($"Team {teamId} is deleted");
                 }
@@ -197,15 +207,15 @@ namespace TeamService.Services
         {
             try
             {
-                Team team = db.Teams.Find(request.TeamId);
-                if (!String.IsNullOrEmpty(request.TeamLeadTag))
-                    team.TeamLeadId = db.Users.First(u => u.UserTag == request.TeamLeadTag).ID;
+                Team team = await db.Teams.FirstAsync(t => t.ID == request.TeamId);
 
-                if (!String.IsNullOrEmpty(request.Name))
-                    team.TeamName = request.Name;
+                team.TeamLeadId = String.IsNullOrEmpty(request.TeamLeadTag) ? team.TeamLeadId : (await db.Users.FirstAsync(u => u.UserTag == request.TeamLeadTag)).ID;
+
+                team.TeamName = String.IsNullOrEmpty(request.Name) ? team.TeamName : request.Name;
+
 
                 db.Teams.Update(team);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Update team: {team.TeamName}");
 
@@ -222,28 +232,39 @@ namespace TeamService.Services
 
         public async override Task<GetUsersReply> GetUsers(GetUsersRequest request, ServerCallContext context)
         {
+            await Console.Out.WriteLineAsync(request.TeamId + "");
+            try
+            {
+                var teamId = db.Teams.First(t => t.ID == request.TeamId).ID;
 
-            var teamId = db.Teams.First(t => t.ID == request.TeamId).ID;
 
+                GetUsersReply listTeams = new GetUsersReply();
+                List<UserReply> replyList = (
+                                             from tu in db.Teams_Users
+                                             join u in db.Users on tu.UserId equals u.ID
+                                             where tu.TeamId == teamId
+                                             select new UserReply()
+                                             {
+                                                 Email = u.Email,
+                                                 FirstName = u.FirstName,
+                                                 LastName = u.LastName,
+                                                 SecondName = u.SecondName,
+                                                 PhoneNumber = u.PhoneNumber,
+                                                 UserTag = u.UserTag,
+                                                 UserId = u.ID
 
-            GetUsersReply listTeams = new GetUsersReply();
-            List<UserReply> replyList = (
-                                         from tu in db.Teams_Users
-                                         join u in db.Users on tu.UserId equals u.ID
-                                         where tu.TeamId == teamId
-                                         select new UserReply()
-                                         {
-                                             Email = u.Email,
-                                             FirstName = u.FirstName,
-                                             LastName = u.LastName,
-                                             SecondName = u.SecondName,
-                                             PhoneNumber = u.PhoneNumber,
-                                             UserTag = u.UserTag
+                                             }).ToList();
 
-                                         }).ToList();
+                listTeams.Users.AddRange(replyList);
+                return await Task.FromResult(listTeams);
 
-            listTeams.Users.AddRange(replyList);
-            return await Task.FromResult(listTeams);
+            }
+            catch (Exception)
+            {
+
+                return new GetUsersReply();
+            }
+
         }
 
 

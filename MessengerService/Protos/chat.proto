@@ -38,6 +38,8 @@ message ChatUserReply {
      string phone_number = 4;
      string email = 5;
      string user_tag = 6;
+     google.protobuf.Int32Value user_id = 7;
+
 }
 
 message GetUsersByChatReply{

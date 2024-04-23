@@ -59,29 +59,26 @@ namespace Getaway.Presentation.Hubs
         public async Task ConnectUserWithGroups(int userId)
         {
 
-            await Console.Out.WriteLineAsync("kk");
+                var teams = await _mediator.Send(new GetTeamsQuery { UserId = userId });
+                foreach (var team in teams)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + team.ID);
+                }
 
-            var teams = await _mediator.Send(new GetTeamsQuery { UserId = userId });
-            foreach (var team in teams)
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + team.ID);
-            }
+                var projects = await _mediator.Send(new GetProjectsQuery { UserId = userId });
+                foreach (var project in projects)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_PROJECT_PREFIX + project.ID);
+                }
 
-            var projects = await _mediator.Send(new GetProjectsQuery { UserId = userId });
-            foreach (var project in projects)
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_PROJECT_PREFIX + project.ID);
-            }
+                var chats = await _mediator.Send(new GetChatsQuery { UserId = userId });
+                foreach (var chat in chats)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_CHAT_PREFIX + chat.ID);
+                }
 
-            var chats = await _mediator.Send(new GetChatsQuery { UserId = userId });
-            foreach (var chat in chats)
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_CHAT_PREFIX + chat.ID);
-            }
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, USER_PREFIX + userId);
-            await Console.Out.WriteLineAsync("con " + USER_PREFIX + userId);
-
+                await Groups.AddToGroupAsync(Context.ConnectionId, USER_PREFIX + userId);
+          
         }
 
 
@@ -99,8 +96,10 @@ namespace Getaway.Presentation.Hubs
                 else if (action == NotificationAction.DELETE)
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, GROUP_CHAT_PREFIX + chatModel.ChatId);
 
+                int a = (int)action;
 
-                await Clients.Group(USER_PREFIX + userId).SendAsync("NewChatNotification", action, chatModel);
+                await Console.Out.WriteLineAsync(USER_PREFIX + userId);
+                await Clients.Group(USER_PREFIX + userId).SendAsync("NewChatNotification", a, chatModel);
 
                 Console.WriteLine("New chat Notification");
             }
@@ -115,7 +114,7 @@ namespace Getaway.Presentation.Hubs
         {
             try
             {
-                await Clients.Group(GROUP_CHAT_PREFIX + chatId).SendAsync("UpdateMembersChatNotification", action, chatId, userModel);
+                await Clients.OthersInGroup(GROUP_CHAT_PREFIX + chatId).SendAsync("UpdateMembersChatNotification", action, chatId, userModel);
 
                 Console.WriteLine("Update members chat notification");
             }

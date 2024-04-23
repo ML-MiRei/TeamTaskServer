@@ -30,6 +30,8 @@ namespace ProjectService.Services
             try
             {
                 _logger.LogInformation($"sprint id = {request.SprintId}");
+
+
                 ProjectTask task = new ProjectTask()
                 {
                     DateCreated = DateTime.Now,
@@ -42,10 +44,7 @@ namespace ProjectService.Services
                     Status = request.Status
                 };
 
-
-
                 await db.ProjectTasks.AddAsync(task);
-
                 db.SaveChanges();
 
 

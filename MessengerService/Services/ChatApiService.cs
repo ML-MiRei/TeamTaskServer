@@ -53,7 +53,8 @@ namespace MessengerService.Services
                                                  FirstName = u.FirstName,
                                                  LastName = u.LastName,
                                                  PhoneNumber = u.PhoneNumber,
-                                                 UserTag = u.UserTag
+                                                 UserTag = u.UserTag,
+                                                 UserId = u.ID
                                              }).ToList();
 
             _logger.LogInformation($"Return {replyList.Count} users");

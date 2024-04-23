@@ -46,19 +46,19 @@ namespace Getaway.Presentation.Controllers
         }
 
 
-        [HttpPost("{projectId}/add-user")]
-        public async Task<ActionResult> AddUserInProject(int projectId, [FromBody] string userTag)
-        {
-            try
-            {
-                await mediator.Send(new AddUserInProjectCommand() { ProjectId = projectId, UserTag = userTag });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
+        //[HttpPost("{projectId}/add-user")]
+        //public async Task<ActionResult> AddUserInProject(int projectId, [FromBody] string userTag)
+        //{
+        //    try
+        //    {
+        //        await mediator.Send(new AddUserInProjectCommand() { ProjectId = projectId, UserTag = userTag });
+        //        return Ok();
+        //    }
+        //    catch
+        //    {
+        //        throw new Exception();
+        //    }
+        //}
 
 
         [HttpPost("create")]
@@ -95,50 +95,6 @@ namespace Getaway.Presentation.Controllers
             }
         }
 
-
-        [HttpDelete("{projectId}/delete")]
-        public async Task<ActionResult> DeleteProject(int projectId)
-        {
-            try
-            {
-                await mediator.Send(new DeleteProjectCommand() { ProjectId = projectId });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
-
-
-        [HttpDelete("{projectId}/delete-user/{userTag}")]
-        public async Task<ActionResult> DeleteUserFromProject(int projectId, string userTag)
-        {
-            try
-            {
-                await mediator.Send(new DeleteUserFromProjectCommand() { ProjectId = projectId, UserTag = userTag });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
-
-
-        [HttpDelete("{projectId}/leave")]
-        public async Task<ActionResult> LeaveFromProject(int projectId, int userId)
-        {
-            try
-            {
-                await mediator.Send(new LeaveFromProjectCommand() { ProjectId = projectId, UserId = userId });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
 
 
         [HttpGet("list")]
@@ -208,20 +164,5 @@ namespace Getaway.Presentation.Controllers
             }
         }
 
-
-        [HttpPatch("{projectId}/update")]
-
-        public async Task<ActionResult> UpdateProject(int projectId, [FromBody] ProjectEntity projectEntity)
-        {
-            try
-            {
-                await mediator.Send(new UpdateProjectCommand() { ProjectId = projectId, ProjectLeadTag = projectEntity.ProjectLeadTag, Name = projectEntity.ProjectName });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
     }
 }

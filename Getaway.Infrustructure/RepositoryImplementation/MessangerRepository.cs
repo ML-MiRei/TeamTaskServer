@@ -200,7 +200,8 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                     SecondName = u.SecondName,
                     LastName = u.LastName,
                     Tag = u.UserTag,
-                    PhoneNumber = u.PhoneNumber
+                    PhoneNumber = u.PhoneNumber,
+                    ID = u.UserId.Value
                 }).ToList();
             }
             catch

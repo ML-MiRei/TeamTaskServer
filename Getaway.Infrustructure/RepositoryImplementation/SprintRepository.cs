@@ -90,5 +90,25 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                 throw new Exception();
             }
         }
+
+        public async Task<SprintEntity> GetSprint(int sprintId)
+        {
+
+            try
+            {
+                var sprint = await Connections.SprintServiceClient.GetSprintAsync(new GetSprintRequest() { SprintId = sprintId});
+                return new SprintEntity
+                {
+                    DateStart = sprint.DateStart.ToDateTime(),
+                    DateEnd = sprint.DateEnd.ToDateTime(),
+                    ID = sprint.SprintId,
+                    ProjectId = sprint.ProjectId
+                };
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
     }
 }

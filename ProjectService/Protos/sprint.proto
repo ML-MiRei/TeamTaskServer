@@ -13,8 +13,14 @@ service SprintService {
   rpc ChangeDateStartSprint (ChangeDateStartSprintRequest) returns (VoidSprintReply);
   rpc ChangeDateEndSprint (ChangeDateEndSprintRequest) returns (VoidSprintReply);
   rpc GetListSprints (GetListSprintsRequest) returns (GetListSprintsReply);
+  rpc GetSprint (GetSprintRequest) returns (SprintReply);
 }
 
+message GetSprintRequest{
+
+	int32 sprint_id = 1;
+
+}
 
 message VoidSprintReply{}
 
@@ -24,6 +30,7 @@ message CreateSprintRequest{
 	google.protobuf.Timestamp date_start = 2;
 	google.protobuf.Timestamp date_end = 3;
 }
+
 
 
 message CreateSprintReply{

@@ -2,13 +2,16 @@
 using Getaway.Infrustructure.Services.Interfaces;
 using Getaway.Core.Entities;
 using Getaway.Application.ReturnsModels;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace Getaway.Presentation.Controllers
 {
 
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthenticationController(IAuthenticationService authenticationService) : ControllerBase
+    public class AuthenticationController(Infrustructure.Services.Interfaces.IAuthenticationService authenticationService) : ControllerBase
     {
 
 
@@ -17,7 +20,9 @@ namespace Getaway.Presentation.Controllers
         {
             try
             {
+
                 var user = await authenticationService.Authentication(email, password);
+
                 return Ok(user);
             }
             catch (Exception)
@@ -36,7 +41,7 @@ namespace Getaway.Presentation.Controllers
                 Console.WriteLine("end");
                 return Ok(user);
             }
-            catch (Exception) 
+            catch (Exception)
 
             {
                 return NotFound();

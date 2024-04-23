@@ -126,7 +126,8 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                     SecondName = p.SecondName,
                     Email = p.Email,
                     PhoneNumber = p.PhoneNumber,
-                    Tag = p.UserTag
+                    Tag = p.UserTag,
+                    ID = p.UserId.Value
 
                 }).ToList();
             }

@@ -16,6 +16,18 @@ namespace ProjectService.Services
             db = new MyDbContext();
         }
 
+        public override Task<SprintReply> GetSprint(GetSprintRequest request, ServerCallContext context)
+        {
+            var sprint = db.Sprints.First(s => s.ID == request.SprintId);
+            return Task.FromResult(new SprintReply
+            {
+                DateEnd = Timestamp.FromDateTimeOffset(sprint.DateEnd),
+                SprintId = sprint.ID,
+                ProjectId = sprint.ProjectId,
+                DateStart = Timestamp.FromDateTimeOffset(sprint.DateStart)
+            });
+        }
+
         public async override Task<VoidSprintReply> ChangeDateEndSprint(ChangeDateEndSprintRequest request, ServerCallContext context)
         {
             try

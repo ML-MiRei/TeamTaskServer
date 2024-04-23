@@ -31,6 +31,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.MapHub<ChatHub>("/online-chat");
+app.MapHub<TeamHub>("/online-teams");
+app.MapHub<ProjectHub>("/online-projects");
 app.MapHub<NotificationHub>("/notification");
 
 

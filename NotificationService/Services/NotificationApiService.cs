@@ -33,7 +33,7 @@ namespace NotificationService.Services
 
                 foreach (int userId in request.UserId)
                 {
-                    await Console.Out.WriteLineAsync(userId + "");
+                    await Console.Out.WriteLineAsync(userId + "  id");
                     await db.Notifications_Users.AddAsync(new Notification_User { UserId = userId, NotificationId = notification.ID });
                 }
 
