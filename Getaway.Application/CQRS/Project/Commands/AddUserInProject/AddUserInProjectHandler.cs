@@ -10,12 +10,11 @@ namespace Getaway.Application.CQRS.Project.Commands.AddUserInProject
 {
     public class DeleteProjectHandler(IProjectRepository projectRepository) : IRequestHandler<AddUserInProjectCommand>
     {
-        public Task Handle(AddUserInProjectCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddUserInProjectCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectRepository.AddUserInProject(request.ProjectId, request.UserTag);
-                return Task.CompletedTask;
+               await projectRepository.AddUserInProject(request.ProjectId, request.UserTag);
             }
             catch (Exception ex)
             {

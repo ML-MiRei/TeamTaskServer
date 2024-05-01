@@ -11,12 +11,11 @@ namespace Getaway.Application.CQRS.Messenger.Chat.Commands.UpdateGroupChat
 {
     public class UpdateGroupChatHandler(IMessangerRepository messangerRepository) : IRequestHandler<UpdateGroupChatCommand>
     {
-        public  Task Handle(UpdateGroupChatCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateGroupChatCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                messangerRepository.UpdateGroupChat(request.ChatId, request.Name, request.AdminTag);
-                return Task.CompletedTask;
+                await messangerRepository.UpdateGroupChat(request.ChatId, request.Name, request.AdminTag);
             }
             catch
             {

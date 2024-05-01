@@ -12,7 +12,7 @@ namespace NotificationService.Services
         public NotificationApiService(ILogger<NotificationApiService> logger)
         {
             _logger = logger;
-            db = new MyDbContext();
+            db =  MyDbContext.GetInstance;
         }
 
         public async override Task<NotificationReply> CreateNotification(CreateNotificationRequest request, ServerCallContext context)

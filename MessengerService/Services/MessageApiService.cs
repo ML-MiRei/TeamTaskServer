@@ -23,12 +23,12 @@ namespace MessengerService.Services
         public MessageApiService(ILogger<MessageApiService> logger)
         {
             _logger = logger;
-            db = new MyDbContext();
+            db = MyDbContext.GetInstance;
         }
 
 
-     
-        public override Task<MessageReply> CreateMessage(CreateMessageRequest request, ServerCallContext context)
+
+        public override async Task<MessageReply> CreateMessage(CreateMessageRequest request, ServerCallContext context)
         {
             try
             {
@@ -43,14 +43,14 @@ namespace MessengerService.Services
                 };
 
                 _logger.LogInformation($"chat id = {request.ChatId}");
-                db.Messages.AddAsync(message);
-                db.SaveChanges();
+               await db.Messages.AddAsync(message);
+               await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Create message chat = {request.ChatId}, text = {request.TextMessage}");
 
                 var creator = db.Users.First(u => u.ID == message.CreatorId);
 
-                return Task.FromResult(new MessageReply()
+                return new MessageReply()
                 {
                     CreatorName = creator.FirstName,
                     DateCreated = Timestamp.FromDateTimeOffset(message.DateCreated),
@@ -58,7 +58,7 @@ namespace MessengerService.Services
                     MessageId = message.ID,
                     TextMessage = message.TextMessage,
                     CreatorTag = creator.UserTag,                    
-                });
+                };
             }
             catch (Exception e)
             {

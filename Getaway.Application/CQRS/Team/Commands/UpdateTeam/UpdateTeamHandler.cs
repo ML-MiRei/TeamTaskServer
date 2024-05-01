@@ -9,8 +9,7 @@ namespace Getaway.Application.CQRS.Team.Commands.UpdateTeam
         {
             try
             {
-                teamRepository.UpdateTeam(new Core.Entities.TeamEntity() { Name = request.Name, TeamLeadTag = request.LeadTag, ID = request.TeamId });
-
+                await teamRepository.UpdateTeam(new Core.Entities.TeamEntity() { Name = request.Name, TeamLeadTag = request.LeadTag, ID = request.TeamId });
             }
             catch (Exception ex)
             {

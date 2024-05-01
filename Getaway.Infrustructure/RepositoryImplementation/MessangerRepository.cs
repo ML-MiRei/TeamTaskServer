@@ -12,7 +12,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 {
     internal class MessangerRepository : IMessangerRepository
     {
-        public async void AddUserInChat(int chatId, string userTag)
+        public async Task AddUserInChat(int chatId, string userTag)
         {
             try
             {
@@ -29,6 +29,33 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             try
             {
                 var chat = (await Connections.ChatServiceClient.CreateGroupChatAsync(new CreateGroupChatRequest() { UserId = userId, Name = name }));
+                return new ChatEntity()
+                {
+                    Type = chat.ChatType,
+                    ID = chat.ChatId,
+                    Image = chat.Image,
+                    ChatName = chat.Name
+                };
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
+
+        public async Task<ChatEntity> CreateGroupChatWithUsers(int adminId, string name, int[] usersId)
+        {
+            try
+            {
+                var request = new CreateGroupChatWithUsersRequest()
+                {
+                    AdminId = adminId,
+                    Name = name,
+                };
+
+                request.UsersId.AddRange(usersId.Select(u => new UserIdReply { UserId = u }));
+
+                var chat = (await Connections.ChatServiceClient.CreateGroupChatWithUsersAsync(request));
                 return new ChatEntity()
                 {
                     Type = chat.ChatType,
@@ -68,7 +95,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         {
             try
             {
-                var chat = (await Connections.ChatServiceClient.CreatePrivateChatAsync(new CreatePrivateChatRequest() { UserId = userId, SecondUserTag =  secondUserTag}));
+                var chat = (await Connections.ChatServiceClient.CreatePrivateChatAsync(new CreatePrivateChatRequest() { UserId = userId, SecondUserTag = secondUserTag }));
 
                 Console.WriteLine("created chat " + chat.Name);
 
@@ -87,7 +114,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteChat(int userId, int chatId)
+        public async Task DeleteChat(int userId, int chatId)
         {
             try
             {
@@ -99,11 +126,11 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteMessage(int chatId, int messageId)
+        public async Task DeleteMessage(int chatId, int messageId)
         {
             try
             {
-                await Connections.MessageServiceClient.DeleteMessageAsync(new DeleteMessageRequest() { ChatId = chatId, MessageId = messageId});
+                await Connections.MessageServiceClient.DeleteMessageAsync(new DeleteMessageRequest() { ChatId = chatId, MessageId = messageId });
             }
             catch
             {
@@ -111,11 +138,11 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteUserFromChat(int chatId, string userTag)
+        public async Task DeleteUserFromChat(int chatId, string userTag)
         {
             try
             {
-                await Connections.ChatServiceClient.DeleteUserFromChatAsync(new DeleteUserFromChatRequst() { ChatId = chatId, UserTag = userTag});
+                await Connections.ChatServiceClient.DeleteUserFromChatAsync(new DeleteUserFromChatRequst() { ChatId = chatId, UserTag = userTag });
             }
             catch
             {
@@ -128,12 +155,14 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             try
             {
                 var chat = await Connections.ChatServiceClient.GetChatAsync(new GetChatRequest() { ChatId = chatId });
+
+
                 return new ChatEntity()
                 {
                     ID = chat.ChatId,
                     ChatName = chat.Name,
                     Type = chat.ChatType,
-                    AdminTag = chat.AdminTag
+                    AdminId = chat.AdminId
                 };
             }
             catch (Exception ex)
@@ -152,11 +181,11 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                 {
                     ID = c.ChatId,
                     ChatName = c.Name,
-                    Image = c.Image,
+                    AdminId = c.AdminId,
                     Type = c.ChatType
                 }).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 throw new Exception();
@@ -169,7 +198,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         {
             try
             {
-                var messages = await Connections.MessageServiceClient.GetListMessageAsync(new GetListMessageRequest() { ChatId = chatId, Limit= 20, Skip = 0 });
+                var messages = await Connections.MessageServiceClient.GetListMessageAsync(new GetListMessageRequest() { ChatId = chatId, Limit = 20, Skip = 0 });
                 return messages.Messages.Select(m => new MessageEntity()
                 {
                     ChatId = chatId,
@@ -181,9 +210,9 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 
                 }).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine( ex.Message);
+                Console.WriteLine(ex.Message);
                 throw new Exception();
             }
         }
@@ -210,7 +239,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateGroupChat(int chatId, string name, string adminTag)
+        public async Task UpdateGroupChat(int chatId, string name, string adminTag)
         {
             try
             {
@@ -222,7 +251,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateMessage(int chatId, int messageId, string textMessage)
+        public async Task UpdateMessage(int chatId, int messageId, string textMessage)
         {
             try
             {

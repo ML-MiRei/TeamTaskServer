@@ -12,12 +12,11 @@ namespace Getaway.Application.CQRS.Project.Commands.UpdateProject
 {
     public class UpdateProjectHandler(IProjectRepository projectRepository) : IRequestHandler<UpdateProjectCommand>
     {
-        public Task Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectRepository.UpdateProjects(request.ProjectId, request.ProjectLeadTag, request.Name);
-                return Task.CompletedTask;
+               await projectRepository.UpdateProjects(request.ProjectId, request.ProjectLeadTag, request.Name);
 
             }
             catch (Exception ex)

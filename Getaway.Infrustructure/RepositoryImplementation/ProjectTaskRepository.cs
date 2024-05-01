@@ -10,7 +10,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 {
     internal class ProjectTaskRepository : IProjectTaskRepository
     {
-        public async void AddInSprintProjectTask(int projectTaskId, int sprintId)
+        public async Task AddInSprintProjectTask(int projectTaskId, int sprintId)
         {
             try
             {
@@ -22,7 +22,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void ChangeStatusProjectTask(int projectTaskId, int status)
+        public async Task ChangeStatusProjectTask(int projectTaskId, int status)
         {
 
             try
@@ -66,7 +66,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteProjectTask(int projectTaskId)
+        public async Task DeleteProjectTask(int projectTaskId)
         {
 
             try
@@ -91,7 +91,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
                     Title = p.Title,
                     SprintId = p.SprintId,
                     ID = p.ProjectTasksId,
-                    UserId = p.UserId,
+                    ExecutorId = p.UserId,
                     Status = p.Status,
                     ProjectId = p.ProjectId
 
@@ -107,7 +107,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 
 
 
-        public async void SetExecutorProjectTask(int projectTaskId, string userTag)
+        public async Task SetExecutorProjectTask(int projectTaskId, string userTag)
         {
 
             try
@@ -120,7 +120,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateProjectTask(int projectTaskId, string? title, string? details)
+        public async Task UpdateProjectTask(int projectTaskId, string? title, string? details)
         {
 
             try

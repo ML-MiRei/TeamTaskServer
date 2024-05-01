@@ -12,13 +12,11 @@ namespace Getaway.Application.CQRS.Project.Commands.CreateProject
 {
     public class CreateProjectHandler(IProjectRepository projectRepository) : IRequestHandler<CreateProjectCommand, ProjectEntity>
     {
-        public Task<ProjectEntity> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
+        public async Task<ProjectEntity> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var project = projectRepository.CreateProjects(request.UserId, request.Name);
-                return project;
-
+                return await projectRepository.CreateProjects(request.UserId, request.Name);
             }
             catch (Exception ex)
             {

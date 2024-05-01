@@ -14,7 +14,7 @@ namespace Getaway.Application.ReturnsModels
         public int Status { get; set; }
 
         public string ExecutorName { get; set; }
-        public bool IsUserExecutor { get; set; }
+        public string ExecutorTag { get; set; }
 
     }
 }

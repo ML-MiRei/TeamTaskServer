@@ -22,15 +22,11 @@ namespace ProjectService.Services
 
 
 
-
-
-
         public async override Task<ProjectTaskReply> CreateProjectTask(CreateProjectTaskRequest request, ServerCallContext context)
         {
             try
             {
-                _logger.LogInformation($"sprint id = {request.SprintId}");
-
+                Console.WriteLine("create task start..");
 
                 ProjectTask task = new ProjectTask()
                 {
@@ -45,10 +41,8 @@ namespace ProjectService.Services
                 };
 
                 await db.ProjectTasks.AddAsync(task);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
-
-                Console.WriteLine("status  = " + request.Status);
 
                 _logger.LogInformation($"Project task '{task.Title}' is created");
 
@@ -77,7 +71,6 @@ namespace ProjectService.Services
         {
             try
             {
-
                 ProjectTask projectTask = db.ProjectTasks.First(u => u.ID == request.ProjectTasksId);
 
                 projectTask.SprintId = request.SprintId;
@@ -85,7 +78,7 @@ namespace ProjectService.Services
 
                 db.ProjectTasks.Update(projectTask);
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"ProjectTask with id = {request.ProjectTasksId} add in sprint id = {request.SprintId}");
 
@@ -154,6 +147,8 @@ namespace ProjectService.Services
         {
             try
             {
+                Console.WriteLine("update task start..");
+
                 ProjectTask projectTask = db.ProjectTasks.First(u => u.ID == request.ProjectTasksId);
 
                 projectTask.Title = String.IsNullOrEmpty(request.Title) ? projectTask.Title : request.Title;
@@ -182,6 +177,9 @@ namespace ProjectService.Services
         {
             try
             {
+                Console.WriteLine("change status task start..");
+
+
                 ProjectTask projectTask = db.ProjectTasks.First(u => u.ID == request.ProjectTasksId);
 
                 projectTask.Status = request.Status;
@@ -206,6 +204,10 @@ namespace ProjectService.Services
         {
             try
             {
+
+                Console.WriteLine("set exec task start..");
+
+
                 ProjectTask projectTask = db.ProjectTasks.First(u => u.ID == request.ProjectTasksId);
 
                 projectTask.UserId = db.Users.First(u => u.UserTag == request.UserTag).ID;

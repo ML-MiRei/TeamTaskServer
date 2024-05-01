@@ -10,12 +10,11 @@ namespace Getaway.Application.CQRS.Project.Commands.LeaveFromProject
 {
     public class LeaveFromProjectDeleteUserFromProjectHandler(IProjectRepository projectRepository) : IRequestHandler<LeaveFromProjectCommand>
     {
-        public Task Handle(LeaveFromProjectCommand request, CancellationToken cancellationToken)
+        public async Task Handle(LeaveFromProjectCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectRepository.LeaveFromProject(request.ProjectId, request.UserId);
-                return Task.CompletedTask;
+                await projectRepository.LeaveFromProject(request.ProjectId, request.UserId);
             }
             catch (Exception ex)
             {

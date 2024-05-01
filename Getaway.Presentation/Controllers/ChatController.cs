@@ -46,16 +46,18 @@ namespace Getaway.Presentation.Controllers
 
             foreach (var chat in chats)
             {
+                Console.WriteLine("chat type = " + chat.Type + " admin = " + chat.AdminId + " user = " + userId);
+
                 result.Add(new ChatModel()
                 {
                     ChatId = chat.ID,
                     Image = chat.Image,
                     ChatName = chat.ChatName,
-                    Messages = mediator.Send(new GetMessagesQuery { ChatId = chat.ID }).Result
+                    Messages = (await mediator.Send(new GetMessagesQuery { ChatId = chat.ID }))
                                         .Select(m => new MessageModel { MessageId = m.ID, TextMessage = m.TextMessage, UserNameCreator = m.UserNameCreator, CreatorTag = m.CreatorTag, DateCreated = m.DateCreated })
                                         .OrderBy(m => m.MessageId)
                                         .ToList(),
-                    Users = mediator.Send(new GetUsersByChatQuery { ChatId = chat.ID }).Result.Select(u => new UserModel
+                    Users = (await mediator.Send(new GetUsersByChatQuery { ChatId = chat.ID })).Select(u => new UserModel
                     {
                         Email = u.Email,
                         LastName = u.LastName,
@@ -82,43 +84,7 @@ namespace Getaway.Presentation.Controllers
 
 
 
-        [HttpPost("group")]
-        public async Task<ActionResult<ChatModel>> CreateGroupChat(int userId, [FromBody] string name)
-        {
-            try
-            {
-                var chat = await mediator.Send(new CreateGroupChatCommand { UserId = userId, Name = name });
-
-
-
-                var result = (new ChatModel()
-                {
-                    ChatId = chat.ID,
-                    Image = chat.Image,
-                    ChatName = chat.ChatName,
-                    Messages = mediator.Send(new GetMessagesQuery { ChatId = chat.ID }).Result
-                                            .Select(m => new MessageModel { MessageId = m.ID, TextMessage = m.TextMessage, UserNameCreator = m.UserNameCreator })
-                                            .ToList(),
-                    Users = mediator.Send(new GetUsersByChatQuery { ChatId = chat.ID }).Result.Select(u => new UserModel
-                    {
-                        Email = u.Email,
-                        LastName = u.LastName,
-                        FirstName = u.FirstName,
-                        SecondName = u.SecondName,
-                        PhoneNumber = u.PhoneNumber,
-                        UserTag = u.Tag
-                    }).ToList(),
-                    Type = chat.Type
-
-                });
-
-                return Ok(result);
-            }
-            catch (Exception)
-            {
-                return new EmptyResult();
-            }
-        }
+     
 
     }
 }

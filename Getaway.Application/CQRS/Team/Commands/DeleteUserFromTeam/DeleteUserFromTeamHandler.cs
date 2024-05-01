@@ -9,7 +9,7 @@ namespace Getaway.Application.CQRS.Team.Commands.DeleteUserFromTeam
         {
             try
             {
-                teamRepository.DeleteUserFromTeam(request.UserTag, request.TeamId);
+                await teamRepository.DeleteUserFromTeam(request.UserTag, request.TeamId);
             }
             catch (Exception ex)
             {

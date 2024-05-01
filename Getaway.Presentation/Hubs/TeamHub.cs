@@ -1,15 +1,4 @@
-﻿using Getaway.Application.CQRS.Messenger.Chat.Commands.AddUserInChat;
-using Getaway.Application.CQRS.Messenger.Chat.Commands.CreatePrivateChat;
-using Getaway.Application.CQRS.Messenger.Chat.Commands.DeleteUserFromChat;
-using Getaway.Application.CQRS.Messenger.Chat.Commands.LeaveChat;
-using Getaway.Application.CQRS.Messenger.Chat.Commands.UpdateGroupChat;
-using Getaway.Application.CQRS.Messenger.Chat.Queries.GetChat;
-using Getaway.Application.CQRS.Messenger.Chat.Queries.GetChats;
-using Getaway.Application.CQRS.Messenger.Message.Commands.CreateMessage;
-using Getaway.Application.CQRS.Messenger.Message.Commands.DeleteMessage;
-using Getaway.Application.CQRS.Messenger.Message.Commands.UpdateMessage;
-using Getaway.Application.CQRS.Messenger.Message.Queries.GetMessages;
-using Getaway.Application.CQRS.Notification.Commands.CreateNotification;
+﻿using Getaway.Application.CQRS.Notification.Commands.CreateNotification;
 using Getaway.Application.CQRS.Team.Commands.AddUserInTeam;
 using Getaway.Application.CQRS.Team.Commands.CreateTeam;
 using Getaway.Application.CQRS.Team.Commands.DeleteUserFromTeam;
@@ -25,11 +14,7 @@ using Getaway.Application.ReturnsModels;
 using Getaway.Core.Entities;
 using Getaway.Core.Enums;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using System;
 
 namespace Getaway.Presentation.Hubs
 {
@@ -41,14 +26,38 @@ namespace Getaway.Presentation.Hubs
     {
         private const string GROUP_TEAM_PREFIX = "team_";
         private const string USER_PREFIX = "user_";
+        private const string NOTIFICATION_TEAM_PREFIX = "Teams";
+
         private static IMediator _mediator;
+        private static ILogger<TeamHub> _logger;
 
         private static UserConnections _userConnections = new UserConnections();
 
-        public TeamHub(IMediator mediator)
+        public TeamHub(IMediator mediator, ILogger<TeamHub> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
+
+
+        public async Task ConnectUserWithTeams(int userId, string userTag)
+        {
+            var teams = await _mediator.Send(new GetTeamsQuery { UserId = userId });
+            foreach (var team in teams)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + team.ID);
+            }
+
+            _userConnections.ListUserConnections.Add(new UserConnection { ConnectionId = Context.ConnectionId, Id = userId, Tag = userTag });
+            await Groups.AddToGroupAsync(Context.ConnectionId, USER_PREFIX + userId);
+        }
+        public override Task OnDisconnectedAsync(Exception? exception)
+        {
+            base.OnDisconnectedAsync(exception);
+            _userConnections.RemoveUserConnectionId(Context.ConnectionId);
+            return Task.CompletedTask;
+        }
+
 
 
         public async Task CreateTeam(int userId, string name)
@@ -58,9 +67,8 @@ namespace Getaway.Presentation.Hubs
                 var team = _mediator.Send(new CreateTeamCommand() { UserId = userId, Name = name }).Result;
                 var user = _mediator.Send(new GetUserByIdQuery() { UserId = userId }).Result;
 
-
                 await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + team.ID);
-                await Clients.Group(GROUP_TEAM_PREFIX + team.ID).SendAsync("CreateTeamReply", new TeamModel()
+                await Clients.Group(GROUP_TEAM_PREFIX + team.ID).SendAsync("NewTeamReply", new TeamModel()
                 {
                     TeamId = team.ID.Value,
                     TeamName = team.Name,
@@ -79,78 +87,47 @@ namespace Getaway.Presentation.Hubs
                     TeamLeadName = user.FirstName
                 });
 
-
-
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.InnerException.Message);
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.InnerException.Message);
+                _logger.LogError(ex.Message);
             }
         }
-
-
-
-        public async Task ConnectUserWithTeams(int userId, string userTag)
-        {
-            var teams = await _mediator.Send(new GetTeamsQuery { UserId = userId });
-            foreach (var team in teams)
-            {
-                Console.WriteLine("pr" + GROUP_TEAM_PREFIX + team.ID);
-                await Groups.AddToGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + team.ID);
-            }
-
-            _userConnections.ListUserConnections.Add(new UserConnection { ConnectionId = Context.ConnectionId, Id = userId, Tag = userTag });
-
-            await Console.Out.WriteLineAsync(Context.ConnectionId);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, USER_PREFIX + userId);
-
-        }
-
-
-        public override Task OnDisconnectedAsync(Exception? exception)
-        {
-            base.OnDisconnectedAsync(exception);
-            _userConnections.RemoveUserConnectionId(Context.ConnectionId);
-            return Task.CompletedTask;
-        }
-
-
         public async Task Update(TeamEntity teamEntity)
         {
             try
             {
                 await _mediator.Send(new UpdateTeamCommand() { LeadTag = teamEntity.TeamLeadTag, Name = teamEntity.Name, TeamId = teamEntity.ID.Value });
 
-                await Clients.Group(GROUP_TEAM_PREFIX + teamEntity.ID).SendAsync("TeamUpdatedReply",
-                    new TeamModel
-                    {
-                        TeamId = teamEntity.ID.Value,
-                        TeamLeadName = (await _mediator.Send(new GetUserByTagQuery { UserTag = teamEntity.TeamLeadTag })).FirstName,
-                        TeamName = teamEntity.Name,
-                        TeamTag = teamEntity.Tag,
-                        Users = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamEntity.ID.Value })).Select(u => new UserModel
-                        {
-                            Email = u.Email,
-                            FirstName = u.FirstName,
-                            SecondName = u.SecondName,
-                            LastName = u.LastName,
-                            PhoneNumber = u.PhoneNumber,
-                            UserTag = u.Tag,
-                            ColorNumber = 4
-                        }).ToList(),
-                        UserRole = _userConnections.GetUserTag(Context.ConnectionId) == teamEntity.TeamLeadTag ? (int)UserRole.LEAD : (int)UserRole.EMPLOYEE
-                    });
+                var users = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamEntity.ID.Value })).Select(u => u.ID).ToList();
+                var notification = await _mediator.Send(new CreateNotificationCommand
+                {
+                    Details = "One of the teams has been updated",
+                    Title = NOTIFICATION_TEAM_PREFIX,
+                    UserId = users
+                });
+
+                await Clients.OthersInGroup(GROUP_TEAM_PREFIX + teamEntity.ID).SendAsync("NotificationReply", new NotificationModel
+                {
+                    Details = notification.Detail,
+                    Title = notification.Title,
+                    NotificationId = notification.ID
+                });
+                await Clients.Group(GROUP_TEAM_PREFIX + teamEntity.ID).SendAsync("TeamUpdatedReply", teamEntity.TeamLeadTag, new TeamModel
+                {
+                    TeamId = teamEntity.ID.Value,
+                    TeamLeadName = (await _mediator.Send(new GetUserByTagQuery { UserTag = teamEntity.TeamLeadTag })).FirstName,
+                    TeamName = teamEntity.Name,
+                });
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException.Message);
             }
         }
-
-
         public async Task AddUser(int teamId, string userTag)
         {
             try
@@ -158,36 +135,46 @@ namespace Getaway.Presentation.Hubs
                 await _mediator.Send(new AddUserInTeamCommand() { TeamId = teamId, UserTag = userTag });
 
                 var newUser = await _mediator.Send(new GetUserByTagQuery { UserTag = userTag });
-
-                await Console.Out.WriteLineAsync("Adduser");
-
-
-                await _mediator.Send(new CreateNotificationCommand
-                {
-                    Details = "You have been added to a new chat",
-                    Title = "Chats",
-                    UserId = new List<int> { newUser.ID }
-                });
-
-
-
-                await _mediator.Send(new CreateNotificationCommand
-                {
-                    Details = "A new user has been added to the chat",
-                    Title = "Chats",
-                    UserId = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId })).Where(u => u.ID != newUser.ID)
-                        .Select(u => u.ID)
-                        .ToList()
-
-                });
-
-
                 var team = await _mediator.Send(new GetTeamQuery { TeamId = teamId });
 
-                await Console.Out.WriteLineAsync("user = " + newUser.ID);
+                var notificationForOne = await _mediator.Send(new CreateNotificationCommand
+                {
+                    Details = "You have been added to a new team",
+                    Title = NOTIFICATION_TEAM_PREFIX,
+                    UserId = new List<int> { newUser.ID }
+                });
+                var notificationForAll = await _mediator.Send(new CreateNotificationCommand
+                {
+                    Details = "A new user has been added to the team",
+                    Title = NOTIFICATION_TEAM_PREFIX,
+                    UserId = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId })).Where(u => u.ID != newUser.ID && u.ID != team.TeamLeadId)
+                         .Select(u => u.ID)
+                         .ToList()
+                });
 
-                await Clients.Group(USER_PREFIX + newUser.ID).SendAsync("NewTeamReply",
-                    new TeamModel
+
+                await Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("AddUserInTeamReply", teamId, new UserModel
+                {
+                    Email = newUser.Email,
+                    SecondName = newUser.SecondName,
+                    FirstName = newUser.FirstName,
+                    LastName = newUser.FirstName,
+                    PhoneNumber = newUser.PhoneNumber,
+                    UserTag = userTag,
+                    ColorNumber = 1
+                });
+                await Clients.OthersInGroup(GROUP_TEAM_PREFIX + teamId).SendAsync("NotificationReply", new NotificationModel
+                {
+                    Details = notificationForAll.Detail,
+                    Title = notificationForAll.Title,
+                    NotificationId = notificationForAll.ID
+                });
+
+
+                if (_userConnections.IsConnectedUser(userTag))
+                {
+                    await Groups.AddToGroupAsync(_userConnections.GetUserConnectionId(newUser.ID), GROUP_TEAM_PREFIX + teamId);
+                    await Clients.Group(USER_PREFIX + newUser.ID).SendAsync("NewTeamReply", new TeamModel
                     {
                         TeamId = team.ID.Value,
                         TeamTag = team.Tag,
@@ -204,40 +191,22 @@ namespace Getaway.Presentation.Hubs
                             UserTag = t.Tag,
                             ColorNumber = 4
                         }).ToList()
-                    }
-                     );
-
-                await Console.Out.WriteLineAsync(GROUP_TEAM_PREFIX + teamId);
-
-                await Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("AddUserInTeamReply",
-                                  teamId,
-                                  new UserModel
-                                  {
-                                      Email = newUser.Email,
-                                      SecondName = newUser.SecondName,
-                                      FirstName = newUser.FirstName,
-                                      LastName = newUser.FirstName,
-                                      PhoneNumber = newUser.PhoneNumber,
-                                      UserTag = userTag,
-                                      ColorNumber = 1
-                                  }
-                                  );
-
-
-                if (_userConnections.IsConnectedUser(userTag))
-                    await Groups.AddToGroupAsync(USER_PREFIX + _userConnections.GetUserConnectionId(newUser.ID), GROUP_TEAM_PREFIX + teamId);
-
-
+                    });
+                    await Clients.Group(USER_PREFIX + _userConnections.GetUserId(userTag)).SendAsync("NotificationReply", new NotificationModel
+                    {
+                        Details = notificationForOne.Detail,
+                        Title = notificationForOne.Title,
+                        NotificationId = notificationForOne.ID
+                    });
+                }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.InnerException.Message);
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
+                _logger.LogError(ex.InnerException.Message);
             }
         }
-
-
         public async Task DeleteUser(int teamId, string userTag)
         {
             try
@@ -245,95 +214,90 @@ namespace Getaway.Presentation.Hubs
                 await _mediator.Send(new DeleteUserFromTeamCommand() { TeamId = teamId, UserTag = userTag });
 
                 var kickedUser = await _mediator.Send(new GetUserByTagQuery { UserTag = userTag });
+                var team = await _mediator.Send(new GetTeamQuery { TeamId = teamId });
 
-
-                await _mediator.Send(new CreateNotificationCommand
+                var notificationForOne = await _mediator.Send(new CreateNotificationCommand
                 {
-                    Details = "You have been added to a new chat",
-                    Title = "Chats",
+                    Details = "You were kicked out of the team",
+                    Title = NOTIFICATION_TEAM_PREFIX,
                     UserId = new List<int> { kickedUser.ID }
                 });
-
-
-
-                await _mediator.Send(new CreateNotificationCommand
+                var notificationForAll = await _mediator.Send(new CreateNotificationCommand
                 {
-                    Details = "A new user has been added to the chat",
-                    Title = "Chats",
-                    UserId = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId })).Where(u => u.ID != kickedUser.ID)
+                    Details = $"User {kickedUser.FirstName} has left the team {team.Name}",
+                    Title = NOTIFICATION_TEAM_PREFIX,
+                    UserId =
+                        (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId })).Where(u => u.ID != kickedUser.ID && u.ID != team.TeamLeadId)
                         .Select(u => u.ID)
                         .ToList()
 
-                });
-
-
-                var team = await _mediator.Send(new GetTeamQuery { TeamId = teamId });
+                }); ;
 
 
 
-                Task task1 = Clients.Group(USER_PREFIX + kickedUser.ID).SendAsync("DeleteTeamReply", teamId);
 
                 if (_userConnections.IsConnectedUser(userTag))
+                {
                     await Groups.RemoveFromGroupAsync(USER_PREFIX + _userConnections.GetUserConnectionId(kickedUser.ID), GROUP_TEAM_PREFIX + teamId);
+                    await Clients.Group(USER_PREFIX + kickedUser.ID).SendAsync("DeleteTeamReply", teamId);
+                    await Clients.Group(USER_PREFIX + kickedUser.ID).SendAsync("NotificationReply", new NotificationModel
+                    {
+                        Details = notificationForOne.Detail,
+                        Title = notificationForOne.Title,
+                        NotificationId = notificationForOne.ID
+                    });
 
-                Task task2 = Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("DeleteUserFromTeamReply", teamId, userTag);
+                }
 
-
-                Task.WaitAll(task1, task2);
+                await Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("DeleteUserFromTeamReply", teamId, userTag);
+                await Clients.OthersInGroup(GROUP_TEAM_PREFIX + teamId).SendAsync("NotificationReply", new NotificationModel
+                {
+                    Details = notificationForAll.Detail,
+                    Title = notificationForAll.Title,
+                    NotificationId = notificationForAll.ID
+                });
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
             }
         }
-
-
         public async Task LeaveFromTeam(int userId, int teamId)
         {
             try
             {
-
-                await Console.Out.WriteLineAsync("Leave team");
-
-
                 await _mediator.Send(new LeaveTeamCommand() { TeamId = teamId, UserId = userId });
 
                 var kickedUser = await _mediator.Send(new GetUserByIdQuery { UserId = userId });
+                var users = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId }));
 
-                var users = (await _mediator.Send(new GetUsersByTeamQuery { TeamId = teamId })).Where(u => u.ID != kickedUser.ID)
-                        .Select(u => u.ID)
-                        .ToList();
-
-
-                if (users != null && users.Count != 0)
+                if (users != null && users.Count > 0)
                 {
-
-                    await _mediator.Send(new CreateNotificationCommand
+                    var notification = await _mediator.Send(new CreateNotificationCommand
                     {
-                        Details = "A new user has been added to the chat",
-                        Title = "Chats",
-                        UserId = users
+                        Details = $"User {kickedUser.FirstName} has left the team",
+                        Title = NOTIFICATION_TEAM_PREFIX,
+                        UserId = users.Select(u => u.ID).ToList()
+                    });
 
+                    await Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("DeleteUserFromTeamReply", teamId, kickedUser.Tag);
+                    await Clients.OthersInGroup(GROUP_TEAM_PREFIX + teamId).SendAsync("NotificationReply", new NotificationModel
+                    {
+                        Details = notification.Detail,
+                        Title = notification.Title,
+                        NotificationId = notification.ID
                     });
                 }
 
-
-
-                await Clients.Group(USER_PREFIX + kickedUser.ID).SendAsync("DeleteTeamReply", teamId);
-
-                if (_userConnections.IsConnectedUser(userId))
-                {
-                    await Console.Out.WriteLineAsync("Delete user " + _userConnections.GetUserConnectionId(userId) + "  team = " + GROUP_TEAM_PREFIX + teamId);
-                    await Groups.RemoveFromGroupAsync(_userConnections.GetUserConnectionId(userId), GROUP_TEAM_PREFIX + teamId);
-                }
-
-                await Clients.Group(GROUP_TEAM_PREFIX + teamId).SendAsync("DeleteUserFromTeamReply", teamId, kickedUser.Tag);
+                await Clients.Group(USER_PREFIX + userId).SendAsync("DeleteTeamReply", teamId);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, GROUP_TEAM_PREFIX + teamId);
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
+
             }
         }
 

@@ -11,12 +11,12 @@ namespace Getaway.Application.CQRS.ProjectTask.Commands.SetExecutorProjectTask
 
     public class SetExecutorProjectTaskHandler(IProjectTaskRepository projectTaskRepository) : IRequestHandler<SetExecutorProjectTaskCommand>
     {
-        public Task Handle(SetExecutorProjectTaskCommand request, CancellationToken cancellationToken)
+        public async Task Handle(SetExecutorProjectTaskCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectTaskRepository.SetExecutorProjectTask(request.ProjectTaskId, request.UserTag);
-                return Task.CompletedTask;
+               await projectTaskRepository.SetExecutorProjectTask(request.ProjectTaskId, request.UserTag);
+
             }
             catch (Exception ex)
             {

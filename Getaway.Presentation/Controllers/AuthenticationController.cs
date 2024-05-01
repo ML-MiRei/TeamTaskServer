@@ -22,7 +22,6 @@ namespace Getaway.Presentation.Controllers
             {
 
                 var user = await authenticationService.Authentication(email, password);
-
                 return Ok(user);
             }
             catch (Exception)

@@ -1,3 +1,4 @@
+using GreatDatabase.Data;
 using UserService.Services;
 
 var builder = WebApplication.CreateBuilder(args);

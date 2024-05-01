@@ -5,6 +5,7 @@ using GreatDatabase.Data.Enums;
 using GreatDatabase.Data.Model;
 using Grpc.Core;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Mvc.TagHelpers;
 
 
 
@@ -23,7 +24,41 @@ namespace MessengerService.Services
         public ChatApiService(ILogger<ChatApiService> logger)
         {
             _logger = logger;
-            db = new MyDbContext();
+            db = MyDbContext.GetInstance;
+        }
+
+
+        public async override Task<ChatReply> CreateGroupChatWithUsers(CreateGroupChatWithUsersRequest request, ServerCallContext context)
+        {
+            Chat chat = new Chat
+            {
+                AdminId = request.AdminId,
+                ChatName = request.Name,
+                DateCreated = DateTime.Now,
+                LastModified = DateTime.Now,
+                Type = (int)ChatTypeEnum.GROUP
+            };
+
+            await db.Chats.AddAsync(chat);
+            await db.SaveChangesAsync();
+
+            await db.AddRangeAsync(request.UsersId.Select(u => new Chat_User
+            {
+                ChatId = chat.ID,
+                DateCreated = DateTime.Now,
+                UserId = u.UserId
+            }));
+            await db.SaveChangesAsync();
+
+            return new ChatReply
+            {
+                AdminId = chat.AdminId,
+                ChatId = chat.ID,
+                ChatType = chat.Type,
+                Name = chat.ChatName
+            };
+
+
         }
 
 
@@ -32,7 +67,7 @@ namespace MessengerService.Services
             var chat = await db.Chats.FindAsync(request.ChatId);
             return new ChatReply
             {
-                AdminTag = db.Users.First(u => u.ID == chat.AdminId).UserTag,
+                AdminId = chat.AdminId,
                 ChatType = chat.Type,
                 ChatId = chat.ID,
                 Name = chat.ChatName
@@ -40,30 +75,30 @@ namespace MessengerService.Services
 
         }
 
-        public override Task<GetUsersByChatReply> GetUsersByChat(GetUsersByChatRequest request, ServerCallContext context)
+        public override async Task<GetUsersByChatReply> GetUsersByChat(GetUsersByChatRequest request, ServerCallContext context)
         {
             GetUsersByChatReply listUsers = new GetUsersByChatReply();
-            List<ChatUserReply> replyList = (from tu in db.Chats_Users
-                                             join u in db.Users on tu.UserId equals u.ID
-                                             where tu.ChatId == request.ChatId
-                                             select new ChatUserReply()
-                                             {
-                                                 Email = u.Email,
-                                                 SecondName = u.SecondName,
-                                                 FirstName = u.FirstName,
-                                                 LastName = u.LastName,
-                                                 PhoneNumber = u.PhoneNumber,
-                                                 UserTag = u.UserTag,
-                                                 UserId = u.ID
-                                             }).ToList();
+            List<ChatUserReply> replyList = await Task.Run(() => (from tu in db.Chats_Users
+                                                                  join u in db.Users on tu.UserId equals u.ID
+                                                                  where tu.ChatId == request.ChatId
+                                                                  select new ChatUserReply()
+                                                                  {
+                                                                      Email = u.Email,
+                                                                      SecondName = u.SecondName,
+                                                                      FirstName = u.FirstName,
+                                                                      LastName = u.LastName,
+                                                                      PhoneNumber = u.PhoneNumber,
+                                                                      UserTag = u.UserTag,
+                                                                      UserId = u.ID
+                                                                  }).ToList());
 
             _logger.LogInformation($"Return {replyList.Count} users");
 
             listUsers.Users.AddRange(replyList);
-            return Task.FromResult(listUsers);
+            return listUsers;
         }
 
-      
+
 
 
         public override async Task<ChatReply> CreateGroupChat(CreateGroupChatRequest request, ServerCallContext context)
@@ -81,23 +116,23 @@ namespace MessengerService.Services
 
 
                 await db.Chats.AddAsync(chat);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 db.Chats_Users.Add(new Chat_User { ChatId = chat.ID, DateCreated = DateTime.Now, UserId = request.UserId });
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Create group chat: {request.Name}");
 
                 return new ChatReply()
                 {
-                    AdminTag = db.Users.First(u => u.ID == request.UserId).UserTag,
+                    AdminId = chat.AdminId,
                     ChatId = chat.ID,
                     ChatType = chat.Type,
                     Name = chat.ChatName
 
                 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 throw new Exception();
@@ -118,17 +153,17 @@ namespace MessengerService.Services
 
 
                 await db.Chats.AddAsync(chat);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 db.Chats_Users.Add(new Chat_User { ChatId = chat.ID, DateCreated = DateTime.Now, UserId = request.UserId });
                 db.Chats_Users.Add(new Chat_User { ChatId = chat.ID, DateCreated = DateTime.Now, UserId = db.Users.First(u => u.UserTag == request.SecondUserTag).ID });
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Create private chat with user with tag {request.SecondUserTag}");
 
                 return new ChatReply()
                 {
-                    AdminTag = db.Users.First(u => u.ID == request.UserId).UserTag,
+                    AdminId = chat.AdminId,
                     ChatId = chat.ID,
                     ChatType = chat.Type,
                     Name = db.Users.First(u => u.ID == db.Chats_Users.First(cu => cu.UserId != request.UserId && cu.ChatId == chat.ID).UserId).FirstName
@@ -196,8 +231,8 @@ namespace MessengerService.Services
                              where cu.UserId == request.UserId
                              select new ChatReply()
                              {
-                                 AdminTag = db.Users.First(u => u.ID == cu.UserId).UserTag,
                                  ChatType = c.Type,
+                                 AdminId = c.AdminId,
                                  ChatId = cu.ChatId,
                                  Name = c.Type == (int)ChatTypeEnum.PRIVATE ? db.Users.First(u => u.ID == db.Chats_Users.First(cc => cc.ChatId == c.ID && cc.UserId != request.UserId).UserId).FirstName : c.ChatName
                              }).ToList();
@@ -222,13 +257,13 @@ namespace MessengerService.Services
             {
                 var user = db.Chats_Users.First(c => c.ChatId == request.ChatId && c.UserId == request.UserId);
                 db.Chats_Users.Remove(user);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 if (!db.Chats_Users.Any(cu => cu.ChatId == request.ChatId))
                 {
                     Chat chat = db.Chats.First(c => c.ID == request.ChatId);
                     db.Chats.Remove(chat);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                 }
 
                 _logger.LogInformation($"User with id = {request.UserId} leave chat with id = {request.ChatId}");
@@ -246,13 +281,15 @@ namespace MessengerService.Services
         {
             try
             {
+
+                Console.WriteLine("chat " + request.ChatId);
                 var chat = db.Chats.First(c => c.ID == request.ChatId);
 
                 chat.ChatName = String.IsNullOrEmpty(request.Name) ? chat.ChatName : request.Name;
                 chat.AdminId = String.IsNullOrEmpty(request.AdminTag) ? chat.AdminId : db.Users.First(u => u.UserTag == request.AdminTag).ID;
 
                 db.Chats.Update(chat);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Update chat with id = {request.ChatId}");
 

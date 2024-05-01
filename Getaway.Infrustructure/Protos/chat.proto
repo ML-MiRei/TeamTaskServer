@@ -19,8 +19,20 @@ service ChatService {
   rpc AddUserInChat (AddUserChatRequest) returns (VoidChatReply);
   rpc GetUsersByChat (GetUsersByChatRequest) returns (GetUsersByChatReply);
   rpc GetChat (GetChatRequest) returns (ChatReply);
+    rpc CreateGroupChatWithUsers (CreateGroupChatWithUsersRequest) returns (ChatReply);
 
 }
+
+message UserIdReply {
+    int32 user_id = 1;
+}
+
+message CreateGroupChatWithUsersRequest{
+    repeated UserIdReply users_id = 2;
+    int32 admin_id = 3;
+    string name = 1;
+}
+
 
 message GetChatRequest{
     int32 chat_id = 1;
@@ -53,7 +65,7 @@ message GetUsersByChatRequest{
 message ChatReply{
      int32 chat_id = 1;
      google.protobuf.StringValue name = 2;
-     string admin_tag = 3;
+     google.protobuf.Int32Value admin_id = 3;
      int32 chat_type = 4;
      string image = 5;
 }

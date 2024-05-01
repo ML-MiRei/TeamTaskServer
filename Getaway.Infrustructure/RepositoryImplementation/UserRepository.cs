@@ -8,7 +8,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 {
     public class UserRepository : IUserRepository
     {
-        public async void DeleteUser(int userId)
+        public async Task DeleteUser(int userId)
         {
             try
             {
@@ -49,7 +49,11 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         {
             try
             {
+                await Console.Out.WriteLineAsync("userTag" + userTag);
+
                 var user = await Connections.UserServiceClient.GetUserByTagAsync(new GetUserByTagRequest() { Tag = userTag });
+                await Console.Out.WriteLineAsync("ss");
+
                 return new UserEntity()
                 {
                     FirstName = user.FirstName,
@@ -66,7 +70,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateUser(UserEntity user)
+        public async Task UpdateUser(UserEntity user)
         {
             try
             {

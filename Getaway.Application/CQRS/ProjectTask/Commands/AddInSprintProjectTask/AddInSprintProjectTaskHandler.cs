@@ -11,12 +11,11 @@ namespace Getaway.Application.CQRS.ProjectTask.Commands.AddInSprintProjectTask
 
     public class AddInSprintProjectTaskHandler(IProjectTaskRepository projectTaskRepository) : IRequestHandler<AddInSprintProjectTaskCommand>
     {
-        public Task Handle(AddInSprintProjectTaskCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddInSprintProjectTaskCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectTaskRepository.AddInSprintProjectTask(request.ProjectTaskId, request.SprintId);
-                return Task.CompletedTask;
+               await projectTaskRepository.AddInSprintProjectTask(request.ProjectTaskId, request.SprintId);
             }
             catch (Exception ex)
             {

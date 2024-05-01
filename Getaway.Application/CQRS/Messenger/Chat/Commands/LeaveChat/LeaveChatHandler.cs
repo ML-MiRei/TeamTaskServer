@@ -11,12 +11,11 @@ namespace Getaway.Application.CQRS.Messenger.Chat.Commands.LeaveChat
 {
     public class LeaveChatHandler(IMessangerRepository messangerRepository) : IRequestHandler<LeaveChatCommand>
     {
-        public Task Handle(LeaveChatCommand request, CancellationToken cancellationToken)
+        public async Task Handle(LeaveChatCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                messangerRepository.DeleteChat(request.UserId, request.ChatId);
-                return Task.CompletedTask;
+                await messangerRepository.DeleteChat(request.UserId, request.ChatId);
             }
             catch
             {

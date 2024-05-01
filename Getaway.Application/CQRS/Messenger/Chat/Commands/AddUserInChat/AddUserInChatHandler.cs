@@ -11,12 +11,11 @@ namespace Getaway.Application.CQRS.Messenger.Chat.Commands.AddUserInChat
 {
     public class AddUserInChatHandler(IMessangerRepository messangerRepository) : IRequestHandler<AddUserInChatCommand>
     {
-        public Task Handle(AddUserInChatCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddUserInChatCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                messangerRepository.AddUserInChat(request.ChatId, request.UserTag);
-                return Task.CompletedTask;
+                await messangerRepository.AddUserInChat(request.ChatId, request.UserTag);
             }
             catch
             {

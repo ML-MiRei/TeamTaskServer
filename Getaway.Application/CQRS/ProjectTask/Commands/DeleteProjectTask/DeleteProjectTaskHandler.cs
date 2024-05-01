@@ -11,12 +11,11 @@ namespace Getaway.Application.CQRS.ProjectTask.Commands.DeleteProjectTask
 
     public class DeleteProjectTaskHandler(IProjectTaskRepository projectTaskRepository) : IRequestHandler<DeleteProjectTaskCommand>
     {
-        public Task Handle(DeleteProjectTaskCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteProjectTaskCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectTaskRepository.DeleteProjectTask(request.ProjectTaskId);
-                return Task.CompletedTask;
+                await projectTaskRepository.DeleteProjectTask(request.ProjectTaskId);
             }
             catch (Exception ex)
             {

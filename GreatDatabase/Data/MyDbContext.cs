@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GreatDatabase.Data.Model;
+using System.Net.Http.Headers;
 
 namespace GreatDatabase.Data
 {
@@ -34,6 +35,7 @@ namespace GreatDatabase.Data
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseSqlServer("Server=DESKTOP-E86S7QI;Database=TeamTaskDB;Trusted_Connection=True;TrustServerCertificate=true;MultipleActiveResultSets=true;");
+                optionsBuilder.EnableSensitiveDataLogging();
             }
             base.OnConfiguring(optionsBuilder);
         }
@@ -45,5 +47,9 @@ namespace GreatDatabase.Data
             modelBuilder.Entity<Team_User>().HasKey(tu => new { tu.TeamId, tu.UserId});
             modelBuilder.Entity<Notification_User>().HasKey(tu => new { tu.NotificationId, tu.UserId});
         }
+
+        static MyDbContext dbContext = new MyDbContext();
+        public static MyDbContext GetInstance => dbContext;
+
     }
 }

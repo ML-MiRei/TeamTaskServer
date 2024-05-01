@@ -15,8 +15,7 @@ namespace Getaway.Application.CQRS.Messenger.Chat.Commands.CreatePrivateChat
         {
             try
             {
-                var chat = await messangerRepository.CreatePrivateChat(request.UserId, request.SecondUserTag);
-                return chat;
+                return await messangerRepository.CreatePrivateChat(request.UserId, request.SecondUserTag);
             }
             catch
             {

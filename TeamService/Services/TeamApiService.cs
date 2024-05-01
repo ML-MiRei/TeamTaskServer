@@ -13,13 +13,35 @@ namespace TeamService.Services
         private static MyDbContext db;
 
 
+
         private readonly ILogger<TeamApiService> _logger;
         public TeamApiService(ILogger<TeamApiService> logger)
         {
             _logger = logger;
-            db = new MyDbContext();
+            db = MyDbContext.GetInstance;
         }
 
+
+        public async override Task<TeamModel> GetTeamByTag(GetTeamByTagRequest request, ServerCallContext context)
+        {
+            try
+            {
+                var team = await db.Teams.FirstAsync(t => t.TeamTag == request.TeamTag);
+                return new TeamModel
+                {
+                    TeamId = team.ID,
+                    TeamLeadId = team.TeamLeadId,
+                    TeamName = team.TeamName,
+                    TeamTag = team.TeamTag,
+                };
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return null;
+            }
+        }
 
         public async override Task<TeamModel> GetTeam(GetTeamRequest request, ServerCallContext context)
         {
@@ -80,14 +102,14 @@ namespace TeamService.Services
             {
                 var userId = db.Users.First(u => u.UserTag == request.UserTag).ID;
 
-                db.Teams_Users.Add(new Team_User()
+                await db.Teams_Users.AddAsync(new Team_User()
                 {
                     TeamId = request.TeamId,
                     UserId = userId,
                     DateCreated = DateTime.Now
                 });
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Add user with tad {request.UserTag} in team with id {request.TeamId}");
 
@@ -116,20 +138,20 @@ namespace TeamService.Services
                 };
 
 
-                db.Teams.Add(team);
-                db.SaveChanges();
+                await db.Teams.AddAsync(team);
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Created team: {team.TeamName}, {team.TeamTag}");
 
 
-                db.Teams_Users.Add(new Team_User()
+                await db.Teams_Users.AddAsync(new Team_User()
                 {
                     TeamId = team.ID,
                     UserId = request.UserId,
                     DateCreated = DateTime.Now
                 });
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"User with id {request.UserId} add in {team.TeamName}");
 
@@ -153,16 +175,17 @@ namespace TeamService.Services
         {
 
             ListTeamsReply listTeams = new ListTeamsReply();
-            List<TeamModel> replyList = (from t in db.Teams
-                                         join tu in db.Teams_Users on t.ID equals tu.TeamId
-                                         where tu.UserId == request.UserId
-                                         select new TeamModel()
-                                         {
-                                             TeamLeadId = t.TeamLeadId,
-                                             TeamTag = t.TeamTag,
-                                             TeamId = t.ID,
-                                             TeamName = t.TeamName
-                                         }).ToList();
+
+            List<TeamModel> replyList = await Task.Run(() => (from t in db.Teams
+                                                              join tu in db.Teams_Users on t.ID equals tu.TeamId
+                                                              where tu.UserId == request.UserId
+                                                              select new TeamModel()
+                                                              {
+                                                                  TeamLeadId = t.TeamLeadId,
+                                                                  TeamTag = t.TeamTag,
+                                                                  TeamId = t.ID,
+                                                                  TeamName = t.TeamName
+                                                              }).ToList());
 
             listTeams.Teams.AddRange(replyList);
 
@@ -175,12 +198,12 @@ namespace TeamService.Services
         {
             try
             {
-                var userId = db.Users.First(u => u.UserTag == request.UserTag).ID;
+                var userId = (await db.Users.FirstAsync(u => u.UserTag == request.UserTag)).ID;
 
-                Team_User team_User = db.Teams_Users.First(tu => tu.TeamId == request.TeamId && tu.UserId == userId);
+                var team_User = await db.Teams_Users.FirstAsync(tu => tu.TeamId == request.TeamId && tu.UserId == userId);
 
                 db.Teams_Users.Remove(team_User);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"User {request.UserTag} leave team with id {request.TeamId}");
 
@@ -188,7 +211,7 @@ namespace TeamService.Services
                 {
                     Team team = db.Teams.First(t => t.ID == request.TeamId);
                     db.Teams.Remove(team);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     _logger.LogInformation($"Team {team.TeamName} was deleted");
                 }
@@ -207,19 +230,20 @@ namespace TeamService.Services
         {
             try
             {
-                Team team = await db.Teams.FirstAsync(t => t.ID == request.TeamId);
 
-                team.TeamLeadId = String.IsNullOrEmpty(request.TeamLeadTag) ? team.TeamLeadId : (await db.Users.FirstAsync(u => u.UserTag == request.TeamLeadTag)).ID;
+                var team = await db.Teams.FirstAsync(t => t.ID == request.TeamId);
 
+
+
+                team.TeamLeadId = String.IsNullOrEmpty(request.TeamLeadTag) ? team.TeamLeadId : (await db.Users.FirstOrDefaultAsync(u => u.UserTag == request.TeamLeadTag)).ID;
                 team.TeamName = String.IsNullOrEmpty(request.Name) ? team.TeamName : request.Name;
-
 
                 db.Teams.Update(team);
                 await db.SaveChangesAsync();
 
-                _logger.LogInformation($"Update team: {team.TeamName}");
+                _logger.LogInformation($"Update team");
 
-                return await Task.FromResult(new VoidTeamReply());
+                return new VoidTeamReply();
 
             }
             catch (Exception ex)
@@ -232,17 +256,13 @@ namespace TeamService.Services
 
         public async override Task<GetUsersReply> GetUsers(GetUsersRequest request, ServerCallContext context)
         {
-            await Console.Out.WriteLineAsync(request.TeamId + "");
             try
             {
-                var teamId = db.Teams.First(t => t.ID == request.TeamId).ID;
-
-
                 GetUsersReply listTeams = new GetUsersReply();
-                List<UserReply> replyList = (
+                var t = Task.Run(() => (
                                              from tu in db.Teams_Users
                                              join u in db.Users on tu.UserId equals u.ID
-                                             where tu.TeamId == teamId
+                                             where tu.TeamId == request.TeamId
                                              select new UserReply()
                                              {
                                                  Email = u.Email,
@@ -253,16 +273,26 @@ namespace TeamService.Services
                                                  UserTag = u.UserTag,
                                                  UserId = u.ID
 
-                                             }).ToList();
+                                             }).ToList());
+
+
+                List<UserReply> replyList = await t;
+
+                Console.WriteLine($"users api amount = {replyList.Count}");
 
                 listTeams.Users.AddRange(replyList);
                 return await Task.FromResult(listTeams);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await Console.Out.WriteLineAsync(ex.Message);
+                await Console.Out.WriteLineAsync(ex.InnerException.Message);
 
-                return new GetUsersReply();
+                await Console.Out.WriteLineAsync("return empty list");
+                var reply = new GetUsersReply();
+                reply.Users.AddRange(new List<UserReply>());
+                return reply;
             }
 
         }

@@ -30,73 +30,6 @@ namespace Getaway.Presentation.Controllers
         Random random = new Random();
 
 
-        [HttpPost("{projectId}/add-team")]
-
-        public async Task<ActionResult> AddTeamInProject(int projectId, [FromBody] string teamTag)
-        {
-            try
-            {
-                await mediator.Send(new AddTeamInProjectCommand() { ProjectId = projectId, TeamTag = teamTag });
-                return Ok();
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
-
-
-        //[HttpPost("{projectId}/add-user")]
-        //public async Task<ActionResult> AddUserInProject(int projectId, [FromBody] string userTag)
-        //{
-        //    try
-        //    {
-        //        await mediator.Send(new AddUserInProjectCommand() { ProjectId = projectId, UserTag = userTag });
-        //        return Ok();
-        //    }
-        //    catch
-        //    {
-        //        throw new Exception();
-        //    }
-        //}
-
-
-        [HttpPost("create")]
-        public async Task<ActionResult<ProjectModel>> CreateProject(int userId, [FromBody] string name)
-        {
-            try
-            {
-                var reply = await mediator.Send(new CreateProjectCommand() { Name = name, UserId = userId });
-
-                var creator = mediator.Send(new GetUserByIdQuery { UserId = reply.ProjectLeadId.Value }).Result;
-
-                return Ok(new ProjectModel
-                {
-                    ProjectId = reply.ID,
-                    ProjectLeaderName = creator.FirstName,
-                    ProjectName = reply.ProjectName,
-                    Sprints = new List<SprintModel>(),
-                    Tasks = new List<ProjectTaskModel>(),
-                    UserRole = (int)UserRole.LEAD,
-                    Users = new List<UserModel> { new UserModel
-                    {
-                    Email = creator.Email,
-                    FirstName = creator.FirstName,
-                    LastName = creator.LastName,
-                    SecondName = creator.SecondName,
-                    PhoneNumber = creator.PhoneNumber,
-                    UserTag = creator.Tag
-                    } }
-                });
-            }
-            catch
-            {
-                throw new Exception();
-            }
-        }
-
-
-
         [HttpGet("list")]
         public async Task<ActionResult<List<ProjectModel>>> GetListProjects(int userId)
         {
@@ -122,9 +55,9 @@ namespace Getaway.Presentation.Controllers
                             {
                                 Details = pt.Detail,
                                 Title = pt.Title,
-                                IsUserExecutor = pt.UserId != null && pt.UserId == userId ? true : false,
-                                Status = pt.Status,
-                                ExecutorName = pt.UserId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.UserId.Value }).Result.FirstName : "",
+                                ExecutorTag = pt.ExecutorId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.ExecutorId.Value }).Result.Tag : null,
+                                Status = pt.Status.Value,
+                                ExecutorName = pt.ExecutorId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.ExecutorId.Value }).Result.FirstName : null,
                                 ProjectTaskId = pt.ID
                             }).ToList()
                         }).ToList(),
@@ -144,16 +77,15 @@ namespace Getaway.Presentation.Controllers
                         {
                             Details = pt.Detail,
                             Title = pt.Title,
-                            IsUserExecutor = pt.UserId != null && pt.UserId == userId ? true : false,
-                            Status = pt.Status,
-                            ExecutorName = pt.UserId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.UserId.Value }).Result.FirstName : "",
+                            ExecutorTag = pt.ExecutorId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.ExecutorId.Value }).Result.Tag : null,
+                            Status = pt.Status.Value,
+                            ExecutorName = pt.ExecutorId != null ? mediator.Send(new GetUserByIdQuery { UserId = pt.ExecutorId.Value }).Result.FirstName : "",
                             ProjectTaskId = pt.ID
                         }).ToList()
 
                     });
 
                 }
-
 
                 return Ok(result);
 

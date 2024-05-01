@@ -9,8 +9,8 @@ namespace Getaway.Application.ServicesInterfaces
 {
     public interface IUserRepository
     {
-        void UpdateUser(UserEntity user);
-        void DeleteUser(int userId);
+        Task UpdateUser(UserEntity user);
+        Task DeleteUser(int userId);
         Task<UserEntity> GetUserById(int userId);
         Task<UserEntity> GetUserByTag(string userTag);
     }

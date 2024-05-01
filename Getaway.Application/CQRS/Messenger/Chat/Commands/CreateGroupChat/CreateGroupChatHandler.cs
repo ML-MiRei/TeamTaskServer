@@ -15,8 +15,7 @@ namespace Getaway.Application.CQRS.Messenger.Chat.Commands.CreateGroupChat
         {
             try
             {
-                var chat = await messangerRepository.CreateGroupChat(request.UserId, request.Name);
-                return chat;
+                return await messangerRepository.CreateGroupChat(request.UserId, request.Name);
             }
             catch
             {

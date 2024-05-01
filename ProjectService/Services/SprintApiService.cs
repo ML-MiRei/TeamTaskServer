@@ -2,6 +2,7 @@
 using GreatDatabase.Data;
 using GreatDatabase.Data.Model;
 using Grpc.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProjectService.Services
 {
@@ -33,7 +34,7 @@ namespace ProjectService.Services
             try
             {
                 Sprint sprint = db.Sprints.First(s => s.ID == request.SprintId);
-                sprint.DateEnd = request.DateEnd.ToDateTime();
+                sprint.DateEnd = request.DateEnd.ToDateTime().AddDays(1);
 
                 db.Sprints.Update(sprint);
                 await db.SaveChangesAsync();
@@ -56,7 +57,7 @@ namespace ProjectService.Services
             {
 
                 Sprint sprint = db.Sprints.First(s => s.ID == request.SprintId);
-                sprint.DateStart = request.DateStart.ToDateTime();
+                sprint.DateStart = request.DateStart.ToDateTime().AddDays(1);
 
                 db.Sprints.Update(sprint);
                 await db.SaveChangesAsync();
@@ -118,6 +119,13 @@ namespace ProjectService.Services
                 Sprint sprint = db.Sprints.First(s => s.ID == request.SprintId);
 
                 db.Sprints.Remove(sprint);
+
+                foreach (var item in db.ProjectTasks.Where(t => t.SprintId == request.SprintId))
+                {
+                    item.Status = 0;
+                    db.ProjectTasks.Update(item);
+                }
+
                 await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Sprint with id = {request.SprintId} is deleted");
@@ -128,6 +136,7 @@ namespace ProjectService.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                _logger.LogError(ex.InnerException.Message);
                 throw new RpcException(new Status(StatusCode.Internal, "Delete db error"));
             }
         }

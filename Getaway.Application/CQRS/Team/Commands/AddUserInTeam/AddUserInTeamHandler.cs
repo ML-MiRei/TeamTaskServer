@@ -10,7 +10,7 @@ namespace Getaway.Application.CQRS.Team.Commands.AddUserInTeam
         {
             try
             {
-                 teamRepository.AddUserInTeam(teamId: request.TeamId, userTag: request.UserTag);
+                await teamRepository.AddUserInTeam(teamId: request.TeamId, userTag: request.UserTag);
             }
             catch (Exception ex)
             {

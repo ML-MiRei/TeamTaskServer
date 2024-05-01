@@ -10,12 +10,11 @@ namespace Getaway.Application.CQRS.Project.Commands.AddTeamInProject
 {
     public class AddTeamInProjectHandler(IProjectRepository projectRepository) : IRequestHandler<AddTeamInProjectCommand>
     {
-        public Task Handle(AddTeamInProjectCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddTeamInProjectCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                projectRepository.AddTeamInProject(request.ProjectId, request.TeamTag);
-                return Task.CompletedTask;
+                await projectRepository.AddTeamInProject(request.ProjectId, request.TeamTag);
             }
             catch (Exception ex)
             {

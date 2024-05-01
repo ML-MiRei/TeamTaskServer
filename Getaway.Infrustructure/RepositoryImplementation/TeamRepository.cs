@@ -13,7 +13,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 
     public class TeamRepository : ITeamRepository
     {
-        public async void AddUserInTeam(int teamId, string userTag)
+        public async Task AddUserInTeam(int teamId, string userTag)
         {
             try
             {
@@ -77,11 +77,8 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         {
             try
             {
-                var users = (await Connections.TeamServiceClient.GetUsersAsync(new GetUsersRequest() { TeamId = teamId })).Users;
-                if (users == null || users.Count == 0)
-                {
-                    throw new NotFoundException();
-                }
+                var users = (await Connections.TeamServiceClient.GetUsersAsync(new GetUsersRequest() { TeamId = teamId }))?.Users;
+
                 return users.Select(u => new UserEntity()
                 {
                     Email = u.Email,
@@ -99,7 +96,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteUserFromTeam(string userTag, int teamId)
+        public async Task DeleteUserFromTeam(string userTag, int teamId)
         {
             try
             {
@@ -111,7 +108,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateTeam(TeamEntity teamEntity)
+        public async Task UpdateTeam(TeamEntity teamEntity)
         {
             try
             {
@@ -124,12 +121,15 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void LeaveTeam(int userId, int teamId)
+        public async Task LeaveTeam(int userId, int teamId)
         {
             try
             {
+
                 await Connections.TeamServiceClient.LeaveTeamAsync(
                     new LeaveTeamRequest() { TeamId = teamId, UserId = userId });
+
+
             }
             catch
             {
@@ -142,6 +142,25 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             try
             {
                 var reply = await Connections.TeamServiceClient.GetTeamAsync(new GetTeamRequest { TeamId = teamId });
+                return new TeamEntity
+                {
+                    ID = reply.TeamId,
+                    Name = reply.TeamName,
+                    Tag = reply.TeamTag,
+                    TeamLeadId = reply.TeamLeadId
+                };
+            }
+            catch
+            {
+                throw new Exception();
+            }
+        }
+
+        public async Task<TeamEntity> GetTeamByTag(string teamTag)
+        {
+            try
+            {
+                var reply = await Connections.TeamServiceClient.GetTeamByTagAsync(new GetTeamByTagRequest { TeamTag = teamTag });
                 return new TeamEntity
                 {
                     ID = reply.TeamId,

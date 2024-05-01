@@ -10,7 +10,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
 {
     public class ProjectRepository : IProjectRepository
     {
-        public async void AddTeamInProject(int projectId, string teamTag)
+        public async Task AddTeamInProject(int projectId, string teamTag)
         {
             try
             {
@@ -22,7 +22,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void AddUserInProject(int projectId, string userTag)
+        public async Task AddUserInProject(int projectId, string userTag)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void DeleteProjects(int projectId)
+        public async Task DeleteProjects(int projectId)
         {
             try
             {
@@ -70,7 +70,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
         }
 
 
-        public async void DeleteUserFromProject(int projectId, string userTag)
+        public async Task DeleteUserFromProject(int projectId, string userTag)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void LeaveFromProject(int projectId, int userId)
+        public async Task LeaveFromProject(int projectId, int userId)
         {
             try
             {
@@ -137,7 +137,7 @@ namespace Getaway.Infrustructure.RepositoryImplementation
             }
         }
 
-        public async void UpdateProjects(int projectId, string? creatorTag, string? name)
+        public async Task UpdateProjects(int projectId, string? creatorTag, string? name)
         {
             try
             {

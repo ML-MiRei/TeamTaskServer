@@ -15,8 +15,7 @@ namespace Getaway.Application.CQRS.ProjectTask.Commands.CreateProjectTask
         {
             try
             {
-                var projectTask = projectTaskRepository.CreateProjectTask(request.ProjectId, request.SprintId, request.Title, request.Details, request.Status);
-                return projectTask.Result;
+                return await projectTaskRepository.CreateProjectTask(request.ProjectId, request.SprintId, request.Title, request.Details, request.Status);
             }
             catch (Exception ex)
             {

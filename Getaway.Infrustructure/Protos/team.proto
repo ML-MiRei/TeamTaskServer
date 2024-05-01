@@ -16,6 +16,7 @@ service TeamService {
   rpc GetUsers (GetUsersRequest) returns (GetUsersReply);
   
   rpc GetTeam (GetTeamRequest) returns (TeamModel);
+  rpc GetTeamByTag (GetTeamByTagRequest) returns (TeamModel);
 
 }
 
@@ -23,6 +24,13 @@ service TeamService {
 message GetTeamRequest{
     int32 team_id = 1;
 }
+
+
+message GetTeamByTagRequest{
+    string team_tag = 1;
+}
+
+
 message VoidTeamReply{}
 
 

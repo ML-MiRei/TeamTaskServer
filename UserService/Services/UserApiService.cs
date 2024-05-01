@@ -10,7 +10,7 @@ namespace UserService.Services
         public UserApiService(ILogger<UserApiService> logger)
         {
             _logger = logger;
-            db = new MyDbContext();
+            db = MyDbContext.GetInstance;
         }
 
         public async override Task<UserVoidReply> DeleteUser(DeleteUserRequest request, ServerCallContext context)
@@ -23,7 +23,7 @@ namespace UserService.Services
             try
             {
                 db.Users.Remove(user);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Delete user with id = {request.UserId}");
 
@@ -103,7 +103,7 @@ namespace UserService.Services
                 user.LastModified = DateTime.Now;
 
                 db.Users.Update(user);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
                 _logger.LogInformation("Success");
                 return await Task.FromResult(new UserVoidReply());
             }

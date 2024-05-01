@@ -75,7 +75,7 @@ namespace ProjectService.Services
                 };
 
                 await db.Projects.AddAsync(project);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
 
                 _logger.LogInformation($"Project is created {project.ProjectName}");
@@ -87,7 +87,7 @@ namespace ProjectService.Services
                     ProjectId = project.ID,
                     UserId = request.UserId
                 });
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"User {request.UserId} add in project {project.ProjectName}");
 
@@ -109,23 +109,25 @@ namespace ProjectService.Services
         }
 
 
-        public override Task<VoidProjectReply> DeleteProject(DeleteProjectRequest request, ServerCallContext context)
+        public async override Task<VoidProjectReply> DeleteProject(DeleteProjectRequest request, ServerCallContext context)
         {
             try
             {
+                Console.WriteLine("Start delete project..");
                 Project project = db.Projects.First(u => u.ID == request.ProjectId);
                 db.Projects.Remove(project);
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Deleted project {request.ProjectId}");
 
-                return Task.FromResult(new VoidProjectReply());
+                return new VoidProjectReply();
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+                _logger.LogError(ex.InnerException.Message);
                 throw new RpcException(new Status(StatusCode.Internal, "delete database error"));
             }
         }
@@ -154,7 +156,7 @@ namespace ProjectService.Services
             return Task.FromResult(listProjects);
         }
 
-        public override Task<VoidProjectReply> UpdateProject(UpdateProjectRequest request, ServerCallContext context)
+        public async override Task<VoidProjectReply> UpdateProject(UpdateProjectRequest request, ServerCallContext context)
         {
             try
             {
@@ -164,11 +166,11 @@ namespace ProjectService.Services
                 project.ProjectLeadId = String.IsNullOrEmpty(request.ProjectLeadTag) ? project.ProjectLeadId : db.Users.First(u => u.UserTag == request.ProjectLeadTag).ID;
                 db.Projects.Update(project);
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 _logger.LogInformation($"Updated project: {project.ProjectName}");
 
-                return Task.FromResult(new VoidProjectReply());
+                return new VoidProjectReply();
             }
             catch (Exception ex)
             {

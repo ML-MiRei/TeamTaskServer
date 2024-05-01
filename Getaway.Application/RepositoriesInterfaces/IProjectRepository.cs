@@ -9,15 +9,15 @@ namespace Getaway.Application.RepositoriesInterfaces
 {
     public interface IProjectRepository
     {
-        void UpdateProjects(int projectId, string? creatorTag, string? name);
-        void DeleteProjects(int projectId);
+        Task UpdateProjects(int projectId, string? creatorTag, string? name);
+        Task DeleteProjects(int projectId);
         Task<ProjectEntity> CreateProjects(int userId, string name);
         Task<List<ProjectEntity>> GetListProjects(int userId);
         Task<ProjectEntity> GetProject(int projectId);
         Task<List<UserEntity>> GetUsersByProject(int projectId);
-        void AddTeamInProject(int projectId, string teamTag);
-        void AddUserInProject(int projectId, string userTag);
-        void DeleteUserFromProject(int projectId, string userTag);
-        void LeaveFromProject(int projectId, int userId);
+        Task AddTeamInProject(int projectId, string teamTag);
+        Task AddUserInProject(int projectId, string userTag);
+        Task DeleteUserFromProject(int projectId, string userTag);
+        Task LeaveFromProject(int projectId, int userId);
     }
 }

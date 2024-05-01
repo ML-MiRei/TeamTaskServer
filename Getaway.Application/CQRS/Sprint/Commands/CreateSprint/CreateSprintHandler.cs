@@ -16,15 +16,8 @@ namespace Getaway.Application.CQRS.Sprint.Commands.CreateSprint
         {
             try
             {
-                var sprint = await sprintRepository.CreateSprint(request.ProjectId, request.DateStart, request.DateEnd);
-                return new SprintEntity
-                {
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    ID = sprint.ID,
-                    ProjectId = request.ProjectId,
-                    ExecutorId = null
-                };
+                return await sprintRepository.CreateSprint(request.ProjectId, request.DateStart, request.DateEnd);
+               
             }
             catch (Exception ex)
             {
